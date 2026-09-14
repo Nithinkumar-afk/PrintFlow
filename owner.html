@@ -30,212 +30,6 @@
 
         <header class="owner-header">
 
-            <div>
-
-                <div class="logo">
-                    PrintFlow
-                </div>
-
-                <p class="owner-label">
-                    Owner Dashboard
-                </p>
-
-            </div>
-
-        </header>
-
-
-        <!-- =========================================
-             DASHBOARD
-             ========================================= -->
-
-        <section class="owner-dashboard">
-
-            <div class="dashboard-heading">
-
-                <div>
-
-                    <p class="eyebrow">
-                        SHOP OVERVIEW
-                    </p>
-
-                    <h1>
-                        Today's Orders
-                    </h1>
-
-                    <p>
-                        Review incoming print requests
-                        and manage your shop queue.
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <!-- =====================================
-                 SUMMARY CARDS
-                 ===================================== -->
-
-            <div class="summary-grid">
-
-                <div class="summary-card">
-
-                    <span>
-                        New Orders
-                    </span>
-
-                    <strong id="newOrdersCount">
-                        0
-                    </strong>
-
-                </div>
-
-
-                <div class="summary-card">
-
-                    <span>
-                        Printing
-                    </span>
-
-                    <strong id="printingOrdersCount">
-                        0
-                    </strong>
-
-                </div>
-
-
-                <div class="summary-card">
-
-                    <span>
-                        Completed
-                    </span>
-
-                    <strong id="completedOrdersCount">
-                        0
-                    </strong>
-
-                </div>
-
-
-                <div class="summary-card">
-
-                    <span>
-                        Today's Sales
-                    </span>
-
-                    <strong id="todaySales">
-                        ₹0
-                    </strong>
-
-                </div>
-
-            </div>
-
-
-            <!-- =====================================
-                 NEW ORDERS
-                 ===================================== -->
-
-            <section class="orders-section">
-
-                <div class="section-heading">
-
-                    <div>
-
-                        <p class="eyebrow">
-                            INCOMING
-                        </p>
-
-                        <h2>
-                            New Print Requests
-                        </h2>
-
-                    </div>
-
-                    <span
-                        class="order-count"
-                        id="orderCount"
-                    >
-                        0 orders
-                    </span>
-
-                </div>
-
-
-                <div
-                    class="orders-list"
-                    id="ordersList"
-                >
-
-                    <!-- Orders will appear here -->
-
-                    <div class="empty-orders">
-
-                        <div class="empty-icon">
-                            ✓
-                        </div>
-
-                        <h3>
-                            No new orders
-                        </h3>
-
-                        <p>
-                            New customer print requests
-                            will appear here.
-                        </p>
-
-                    </div>
-
-                </div>
-
-            </section>
-
-        </section>
-
-    </main>
-
-
-    <!-- =========================================
-         OWNER JAVASCRIPT
-         ========================================= -->
-
-    <script src="owner.js"></script>
-
-</body>
-
-</html><!DOCTYPE html>
-<html lang="en">
-
-<head>
-
-    <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>PrintFlow Owner Dashboard</title>
-
-    <link
-        rel="stylesheet"
-        href="styles.css"
-    >
-
-</head>
-
-
-<body>
-
-    <main class="owner-page">
-
-        <!-- =========================================
-             HEADER
-             ========================================= -->
-
-        <header class="owner-header">
-
             <div class="owner-brand">
 
                 <div class="logo">
@@ -289,6 +83,10 @@
 
         <section class="owner-dashboard">
 
+            <!-- =====================================
+                 HEADING
+                 ===================================== -->
+
             <div class="dashboard-heading">
 
                 <div>
@@ -297,9 +95,11 @@
                         SHOP OVERVIEW
                     </p>
 
+
                     <h1>
                         Today's Orders
                     </h1>
+
 
                     <p>
                         Review incoming print requests
@@ -323,6 +123,7 @@
                         New Orders
                     </span>
 
+
                     <strong id="newOrdersCount">
                         0
                     </strong>
@@ -335,6 +136,7 @@
                     <span>
                         Printing
                     </span>
+
 
                     <strong id="printingOrdersCount">
                         0
@@ -349,6 +151,7 @@
                         Completed
                     </span>
 
+
                     <strong id="completedOrdersCount">
                         0
                     </strong>
@@ -362,6 +165,7 @@
                         Today's Sales
                     </span>
 
+
                     <strong id="todaySales">
                         ₹0
                     </strong>
@@ -372,7 +176,7 @@
 
 
             <!-- =====================================
-                 NEW ORDERS
+                 ORDERS SECTION
                  ===================================== -->
 
             <section class="orders-section">
@@ -385,11 +189,13 @@
                             INCOMING
                         </p>
 
+
                         <h2>
                             New Print Requests
                         </h2>
 
                     </div>
+
 
                     <span
                         class="order-count"
@@ -401,12 +207,19 @@
                 </div>
 
 
+                <!-- =================================
+                     ORDER LIST
+                     ================================= -->
+
                 <div
                     class="orders-list"
                     id="ordersList"
                 >
 
-                    <!-- Orders will appear here -->
+                    <!--
+                        owner.js will load the online
+                        orders from Supabase here.
+                    -->
 
                     <div class="empty-orders">
 
@@ -414,9 +227,11 @@
                             ✓
                         </div>
 
+
                         <h3>
                             No new orders
                         </h3>
+
 
                         <p>
                             New customer print requests
@@ -435,10 +250,30 @@
 
 
     <!-- =========================================
+         SUPABASE LIBRARY
+         ========================================= -->
+
+    <script
+        src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+    ></script>
+
+
+    <!-- =========================================
+         SUPABASE CONFIG
+         ========================================= -->
+
+    <script
+        src="supabase-config.js"
+    ></script>
+
+
+    <!-- =========================================
          OWNER JAVASCRIPT
          ========================================= -->
 
-    <script src="owner.js"></script>
+    <script
+        src="owner.js"
+    ></script>
 
 </body>
 
