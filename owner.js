@@ -1,3 +1,12 @@
+// ============================================
+// PRINTFLOW OWNER DASHBOARD
+// ============================================
+
+
+// ============================================
+// DOM ELEMENTS
+// ============================================
+
 const ordersList =
     document.getElementById("ordersList");
 
@@ -18,80 +27,797 @@ const orderCount =
 
 
 // ============================================
-// STORAGE KEY
+// SUPABASE
 // ============================================
 
-const ordersStorageKey =
-    "printFlowOrders";
+let supabaseClient = null;
+
+let refreshTimer = null;
+
+let isLoadingOrders = false;
 
 
 // ============================================
-// GET SAVED ORDERS
+// LOAD SUPABASE LIBRARY
 // ============================================
 
-function getSavedOrders() {
+function loadScript(src) {
 
-    try {
+    return new Promise(
+        function (resolve, reject) {
 
-        const savedOrders =
-            localStorage.getItem(
-                ordersStorageKey
+            const existingScript =
+                document.querySelector(
+                    `script[src="${src}"]`
+                );
+
+
+            if (existingScript) {
+
+                if (
+                    existingScript.dataset.loaded ===
+                    "true"
+                ) {
+
+                    resolve();
+
+                    return;
+                }
+
+
+                existingScript.addEventListener(
+                    "load",
+                    resolve,
+                    {
+                        once: true
+                    }
+                );
+
+
+                existingScript.addEventListener(
+                    "error",
+                    reject,
+                    {
+                        once: true
+                    }
+                );
+
+
+                return;
+            }
+
+
+            const script =
+                document.createElement(
+                    "script"
+                );
+
+
+            script.src =
+                src;
+
+
+            script.async =
+                false;
+
+
+            script.addEventListener(
+                "load",
+                function () {
+
+                    script.dataset.loaded =
+                        "true";
+
+                    resolve();
+
+                },
+                {
+                    once: true
+                }
             );
 
 
-        if (!savedOrders) {
-            return [];
+            script.addEventListener(
+                "error",
+                function () {
+
+                    reject(
+                        new Error(
+                            "Could not load Supabase."
+                        )
+                    );
+
+                },
+                {
+                    once: true
+                }
+            );
+
+
+            document.head.appendChild(
+                script
+            );
+
+        }
+    );
+}
+
+
+// ============================================
+// INITIALIZE SUPABASE
+// ============================================
+
+async function initializeSupabase() {
+
+    try {
+
+        // ========================================
+        // LOAD SUPABASE LIBRARY
+        // ========================================
+
+        if (
+            typeof window.supabase ===
+            "undefined"
+        ) {
+
+            await loadScript(
+                "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+            );
+
         }
 
 
-        const orders =
-            JSON.parse(savedOrders);
+        // ========================================
+        // LOAD CONFIG
+        // ========================================
+
+        if (
+            typeof window.supabaseClient ===
+            "undefined"
+        ) {
+
+            const configScript =
+                document.querySelector(
+                    'script[src^="supabase-config.js"]'
+                );
 
 
-        if (!Array.isArray(orders)) {
-            return [];
+            if (
+                !configScript
+            ) {
+
+                await loadScript(
+                    "supabase-config.js"
+                );
+
+            }
+
+
+            // Give the configuration script
+            // a moment to initialize.
+
+            await new Promise(
+                resolve =>
+                    setTimeout(
+                        resolve,
+                        100
+                    )
+            );
+
         }
 
 
-        return orders;
+        if (
+            typeof window.supabaseClient ===
+            "undefined"
+        ) {
+
+            throw new Error(
+                "Supabase configuration could not be loaded."
+            );
+
+        }
+
+
+        supabaseClient =
+            window.supabaseClient;
+
+
+        console.log(
+            "PrintFlow owner Supabase connected."
+        );
+
+
+        return true;
 
     }
 
     catch (error) {
 
         console.error(
-            "Could not read orders:",
+            "Supabase initialization failed:",
             error
         );
 
-        return [];
+
+        return false;
     }
 }
 
 
 // ============================================
-// SAVE ORDERS
+// LOGIN SCREEN
 // ============================================
 
-function saveOrders(orders) {
+function showLoginScreen() {
 
-    try {
-
-        localStorage.setItem(
-            ordersStorageKey,
-            JSON.stringify(orders)
+    const existing =
+        document.getElementById(
+            "printFlowOwnerLogin"
         );
+
+
+    if (
+        existing
+    ) {
+
+        return;
+    }
+
+
+    const overlay =
+        document.createElement(
+            "div"
+        );
+
+
+    overlay.id =
+        "printFlowOwnerLogin";
+
+
+    overlay.style.position =
+        "fixed";
+
+    overlay.style.inset =
+        "0";
+
+    overlay.style.zIndex =
+        "99999";
+
+    overlay.style.display =
+        "flex";
+
+    overlay.style.alignItems =
+        "center";
+
+    overlay.style.justifyContent =
+        "center";
+
+    overlay.style.padding =
+        "20px";
+
+    overlay.style.background =
+        "rgba(17, 24, 39, 0.92)";
+
+
+    const card =
+        document.createElement(
+            "div"
+        );
+
+
+    card.style.width =
+        "100%";
+
+    card.style.maxWidth =
+        "420px";
+
+    card.style.padding =
+        "30px";
+
+    card.style.background =
+        "white";
+
+    card.style.borderRadius =
+        "16px";
+
+    card.style.boxShadow =
+        "0 20px 60px rgba(0,0,0,0.25)";
+
+
+    const eyebrow =
+        document.createElement(
+            "p"
+        );
+
+
+    eyebrow.textContent =
+        "PRINTFLOW OWNER";
+
+
+    eyebrow.style.marginBottom =
+        "10px";
+
+    eyebrow.style.fontSize =
+        "12px";
+
+    eyebrow.style.fontWeight =
+        "700";
+
+    eyebrow.style.letterSpacing =
+        "2px";
+
+    eyebrow.style.color =
+        "#6b7280";
+
+
+    const title =
+        document.createElement(
+            "h2"
+        );
+
+
+    title.textContent =
+        "Owner Login";
+
+
+    title.style.marginBottom =
+        "10px";
+
+    title.style.color =
+        "#111827";
+
+
+    const description =
+        document.createElement(
+            "p"
+        );
+
+
+    description.textContent =
+        "Sign in to view and manage customer print orders.";
+
+    description.style.marginBottom =
+        "24px";
+
+    description.style.color =
+        "#6b7280";
+
+    description.style.lineHeight =
+        "1.6";
+
+
+    const emailInput =
+        document.createElement(
+            "input"
+        );
+
+
+    emailInput.type =
+        "email";
+
+    emailInput.placeholder =
+        "Owner email";
+
+    emailInput.autocomplete =
+        "username";
+
+    emailInput.style.width =
+        "100%";
+
+    emailInput.style.padding =
+        "14px";
+
+    emailInput.style.marginBottom =
+        "12px";
+
+    emailInput.style.border =
+        "1px solid #d1d5db";
+
+    emailInput.style.borderRadius =
+        "10px";
+
+    emailInput.style.fontSize =
+        "15px";
+
+
+    const passwordInput =
+        document.createElement(
+            "input"
+        );
+
+
+    passwordInput.type =
+        "password";
+
+    passwordInput.placeholder =
+        "Password";
+
+    passwordInput.autocomplete =
+        "current-password";
+
+    passwordInput.style.width =
+        "100%";
+
+    passwordInput.style.padding =
+        "14px";
+
+    passwordInput.style.marginBottom =
+        "12px";
+
+    passwordInput.style.border =
+        "1px solid #d1d5db";
+
+    passwordInput.style.borderRadius =
+        "10px";
+
+    passwordInput.style.fontSize =
+        "15px";
+
+
+    const message =
+        document.createElement(
+            "p"
+        );
+
+
+    message.style.display =
+        "none";
+
+    message.style.marginBottom =
+        "12px";
+
+    message.style.color =
+        "#b91c1c";
+
+    message.style.fontSize =
+        "13px";
+
+
+    const loginButton =
+        document.createElement(
+            "button"
+        );
+
+
+    loginButton.type =
+        "button";
+
+
+    loginButton.textContent =
+        "OWNER LOGIN";
+
+
+    loginButton.style.width =
+        "100%";
+
+    loginButton.style.padding =
+        "15px";
+
+    loginButton.style.border =
+        "none";
+
+    loginButton.style.borderRadius =
+        "10px";
+
+    loginButton.style.background =
+        "#111827";
+
+    loginButton.style.color =
+        "white";
+
+    loginButton.style.fontSize =
+        "15px";
+
+    loginButton.style.fontWeight =
+        "700";
+
+    loginButton.style.cursor =
+        "pointer";
+
+
+    async function login() {
+
+        const email =
+            emailInput.value.trim();
+
+
+        const password =
+            passwordInput.value;
+
+
+        if (
+            !email ||
+            !password
+        ) {
+
+            message.textContent =
+                "Please enter your email and password.";
+
+            message.style.display =
+                "block";
+
+            return;
+        }
+
+
+        loginButton.disabled =
+            true;
+
+        loginButton.textContent =
+            "SIGNING IN...";
+
+
+        message.style.display =
+            "none";
+
+
+        try {
+
+            const {
+                error
+            } =
+                await supabaseClient.auth.signInWithPassword({
+                    email:
+                        email,
+
+                    password:
+                        password
+                });
+
+
+            if (
+                error
+            ) {
+
+                throw error;
+
+            }
+
+
+            overlay.remove();
+
+
+            await loadOrders();
+
+
+            startAutoRefresh();
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "Owner login failed:",
+                error
+            );
+
+
+            message.textContent =
+                error.message ||
+                "Login failed. Please check your details.";
+
+
+            message.style.display =
+                "block";
+
+        }
+
+        finally {
+
+            loginButton.disabled =
+                false;
+
+            loginButton.textContent =
+                "OWNER LOGIN";
+
+        }
 
     }
 
-    catch (error) {
+
+    loginButton.addEventListener(
+        "click",
+        login
+    );
+
+
+    passwordInput.addEventListener(
+        "keydown",
+        function (event) {
+
+            if (
+                event.key ===
+                "Enter"
+            ) {
+
+                login();
+
+            }
+
+        }
+    );
+
+
+    card.appendChild(
+        eyebrow
+    );
+
+    card.appendChild(
+        title
+    );
+
+    card.appendChild(
+        description
+    );
+
+    card.appendChild(
+        emailInput
+    );
+
+    card.appendChild(
+        passwordInput
+    );
+
+    card.appendChild(
+        message
+    );
+
+    card.appendChild(
+        loginButton
+    );
+
+
+    overlay.appendChild(
+        card
+    );
+
+
+    document.body.appendChild(
+        overlay
+    );
+
+
+    emailInput.focus();
+
+}
+
+
+// ============================================
+// CHECK OWNER SESSION
+// ============================================
+
+async function checkOwnerSession() {
+
+    const {
+        data,
+        error
+    } =
+        await supabaseClient.auth.getSession();
+
+
+    if (
+        error
+    ) {
 
         console.error(
-            "Could not save orders:",
+            "Could not check owner session:",
             error
         );
 
+
+        return false;
     }
+
+
+    return Boolean(
+        data &&
+        data.session
+    );
+}
+
+
+// ============================================
+// SIGN OUT BUTTON
+// ============================================
+
+function addSignOutButton() {
+
+    if (
+        document.getElementById(
+            "printFlowOwnerSignOut"
+        )
+    ) {
+
+        return;
+    }
+
+
+    const button =
+        document.createElement(
+            "button"
+        );
+
+
+    button.id =
+        "printFlowOwnerSignOut";
+
+
+    button.type =
+        "button";
+
+
+    button.textContent =
+        "LOG OUT";
+
+
+    button.style.position =
+        "fixed";
+
+    button.style.right =
+        "20px";
+
+    button.style.bottom =
+        "20px";
+
+    button.style.zIndex =
+        "1000";
+
+    button.style.padding =
+        "10px 14px";
+
+    button.style.border =
+        "1px solid #d1d5db";
+
+    button.style.borderRadius =
+        "9px";
+
+    button.style.background =
+        "white";
+
+    button.style.color =
+        "#111827";
+
+    button.style.fontSize =
+        "12px";
+
+    button.style.fontWeight =
+        "700";
+
+    button.style.cursor =
+        "pointer";
+
+
+    button.addEventListener(
+        "click",
+        async function () {
+
+            await supabaseClient.auth.signOut();
+
+
+            if (
+                refreshTimer
+            ) {
+
+                clearInterval(
+                    refreshTimer
+                );
+
+                refreshTimer =
+                    null;
+            }
+
+
+            location.reload();
+
+        }
+    );
+
+
+    document.body.appendChild(
+        button
+    );
+
 }
 
 
@@ -101,17 +827,16 @@ function saveOrders(orders) {
 
 function formatPrice(price) {
 
-    if (
-        typeof price === "number" &&
-        Number.isFinite(price)
-    ) {
-
-        return "₹" + price;
-
-    }
+    const numeric =
+        getNumericPrice(
+            price
+        );
 
 
-    return price || "₹0";
+    return (
+        "₹" +
+        numeric
+    );
 }
 
 
@@ -138,8 +863,14 @@ function getNumericPrice(price) {
         const numericValue =
             Number(
                 price
-                    .replace("₹", "")
-                    .replace(/,/g, "")
+                    .replace(
+                        "₹",
+                        ""
+                    )
+                    .replace(
+                        /,/g,
+                        ""
+                    )
                     .trim()
             );
 
@@ -167,13 +898,19 @@ function getNumericPrice(price) {
 
 function formatDateTime(dateString) {
 
-    if (!dateString) {
+    if (
+        !dateString
+    ) {
+
         return "Unknown time";
+
     }
 
 
     const date =
-        new Date(dateString);
+        new Date(
+            dateString
+        );
 
 
     if (
@@ -190,8 +927,11 @@ function formatDateTime(dateString) {
     return date.toLocaleString(
         "en-IN",
         {
-            dateStyle: "medium",
-            timeStyle: "short"
+            dateStyle:
+                "medium",
+
+            timeStyle:
+                "short"
         }
     );
 }
@@ -203,28 +943,163 @@ function formatDateTime(dateString) {
 
 function isToday(dateString) {
 
-    if (!dateString) {
+    if (
+        !dateString
+    ) {
+
         return false;
+
     }
 
 
     const orderDate =
-        new Date(dateString);
+        new Date(
+            dateString
+        );
+
 
     const today =
         new Date();
 
 
     return (
-        orderDate.getDate() === today.getDate() &&
-        orderDate.getMonth() === today.getMonth() &&
-        orderDate.getFullYear() === today.getFullYear()
+        orderDate.getDate() ===
+            today.getDate() &&
+
+        orderDate.getMonth() ===
+            today.getMonth() &&
+
+        orderDate.getFullYear() ===
+            today.getFullYear()
     );
 }
 
 
 // ============================================
-// UPDATE DASHBOARD SUMMARY
+// CONVERT SUPABASE ORDER
+// ============================================
+
+function mapOrder(row) {
+
+    return {
+
+        id:
+            row.id,
+
+        orderNumber:
+            row.order_number,
+
+        documentName:
+            row.document_name,
+
+        fileType:
+            row.file_type,
+
+        fileSize:
+            row.file_size,
+
+        totalPages:
+            row.total_pages ||
+            1,
+
+        selectedPages:
+            row.selected_pages ||
+            1,
+
+        pageRange:
+            row.page_range ||
+            "All",
+
+        copies:
+            row.copies ||
+            1,
+
+        paperSize:
+            row.paper_size ||
+            "A4",
+
+        printType:
+            row.print_type ||
+            "B&W",
+
+        printSides:
+            row.print_sides ||
+            "Single",
+
+        estimatedPrice:
+            row.estimated_price ||
+            0,
+
+        finalPrice:
+            row.final_price,
+
+        status:
+            row.status ||
+            "New",
+
+        createdAt:
+            row.created_at,
+
+        printingStartedAt:
+            row.printing_started_at,
+
+        completedAt:
+            row.completed_at,
+
+        cancelledAt:
+            row.cancelled_at
+
+    };
+
+}
+
+
+// ============================================
+// GET ORDERS FROM SUPABASE
+// ============================================
+
+async function getOnlineOrders() {
+
+    const {
+        data,
+        error
+    } =
+        await supabaseClient
+            .from("orders")
+            .select("*")
+            .order(
+                "created_at",
+                {
+                    ascending:
+                        false
+                }
+            );
+
+
+    if (
+        error
+    ) {
+
+        console.error(
+            "Could not load online orders:",
+            error
+        );
+
+
+        throw error;
+    }
+
+
+    return (
+        data || []
+    ).map(
+        mapOrder
+    );
+}
+
+
+// ============================================
+// UPDATE SUMMARY
 // ============================================
 
 function updateSummary(orders) {
@@ -232,21 +1107,24 @@ function updateSummary(orders) {
     const newOrders =
         orders.filter(
             order =>
-                order.status === "New"
+                order.status ===
+                "New"
         );
 
 
     const printingOrders =
         orders.filter(
             order =>
-                order.status === "Printing"
+                order.status ===
+                "Printing"
         );
 
 
     const completedOrders =
         orders.filter(
             order =>
-                order.status === "Completed"
+                order.status ===
+                "Completed"
         );
 
 
@@ -262,12 +1140,15 @@ function updateSummary(orders) {
 
     const sales =
         todayCompletedOrders.reduce(
-            function (total, order) {
+            function (
+                total,
+                order
+            ) {
 
                 return (
                     total +
                     getNumericPrice(
-                        order.finalPrice ||
+                        order.finalPrice ??
                         order.estimatedPrice
                     )
                 );
@@ -290,28 +1171,33 @@ function updateSummary(orders) {
 
 
     todaySales.textContent =
-        "₹" + sales;
+        "₹" +
+        sales;
 
 
     const visibleOrders =
         orders.filter(
             order =>
-                order.status !== "Completed" &&
-                order.status !== "Cancelled"
+                order.status !==
+                    "Completed" &&
+                order.status !==
+                    "Cancelled"
         );
 
 
     orderCount.textContent =
         `${visibleOrders.length} ${
-            visibleOrders.length === 1
+            visibleOrders.length ===
+            1
                 ? "order"
                 : "orders"
         }`;
+
 }
 
 
 // ============================================
-// CREATE ELEMENT HELPER
+// CREATE ELEMENT
 // ============================================
 
 function createElement(
@@ -321,10 +1207,14 @@ function createElement(
 ) {
 
     const element =
-        document.createElement(tag);
+        document.createElement(
+            tag
+        );
 
 
-    if (className) {
+    if (
+        className
+    ) {
 
         element.className =
             className;
@@ -333,7 +1223,8 @@ function createElement(
 
 
     if (
-        text !== undefined
+        text !==
+        undefined
     ) {
 
         element.textContent =
@@ -343,103 +1234,133 @@ function createElement(
 
 
     return element;
+
 }
 
 
 // ============================================
-// CHANGE ORDER STATUS
+// UPDATE ORDER STATUS ONLINE
 // ============================================
 
-function updateOrderStatus(
+async function updateOrderStatus(
     orderNumber,
     newStatus
 ) {
 
-    const orders =
-        getSavedOrders();
+    const updateData = {
 
+        status:
+            newStatus
 
-    const orderIndex =
-        orders.findIndex(
-            order =>
-                order.orderNumber ===
-                orderNumber
-        );
+    };
 
 
     if (
-        orderIndex === -1
+        newStatus ===
+        "Printing"
     ) {
 
-        alert(
-            "This order could not be found."
-        );
-
-        return false;
-    }
-
-
-    orders[orderIndex].status =
-        newStatus;
-
-
-    // ========================================
-    // PRINTING TIMESTAMP
-    // ========================================
-
-    if (
-        newStatus === "Printing"
-    ) {
-
-        orders[orderIndex].printingStartedAt =
+        updateData.printing_started_at =
             new Date().toISOString();
 
     }
 
 
-    // ========================================
-    // COMPLETION TIMESTAMP
-    // ========================================
-
     if (
-        newStatus === "Completed"
+        newStatus ===
+        "Completed"
     ) {
 
-        orders[orderIndex].completedAt =
+        updateData.completed_at =
             new Date().toISOString();
-
-
-        orders[orderIndex].finalPrice =
-            orders[orderIndex].finalPrice ||
-            orders[orderIndex].estimatedPrice;
 
     }
 
 
-    // ========================================
-    // CANCELLATION TIMESTAMP
-    // ========================================
-
     if (
-        newStatus === "Cancelled"
+        newStatus ===
+        "Cancelled"
     ) {
 
-        orders[orderIndex].cancelledAt =
+        updateData.cancelled_at =
             new Date().toISOString();
 
-
-        orders[orderIndex].finalPrice =
+        updateData.final_price =
             0;
 
     }
 
 
-    saveOrders(
-        orders
-    );
+    if (
+        newStatus ===
+        "Completed"
+    ) {
+
+        const {
+            data:
+                existingOrder,
+            error:
+                existingError
+        } =
+            await supabaseClient
+                .from("orders")
+                .select(
+                    "estimated_price, final_price"
+                )
+                .eq(
+                    "order_number",
+                    orderNumber
+                )
+                .single();
+
+
+        if (
+            existingError
+        ) {
+
+            throw existingError;
+
+        }
+
+
+        updateData.final_price =
+            existingOrder.final_price ??
+            existingOrder.estimated_price ??
+            0;
+
+    }
+
+
+    const {
+        error
+    } =
+        await supabaseClient
+            .from("orders")
+            .update(
+                updateData
+            )
+            .eq(
+                "order_number",
+                orderNumber
+            );
+
+
+    if (
+        error
+    ) {
+
+        console.error(
+            "Order update failed:",
+            error
+        );
+
+
+        throw error;
+    }
 
 
     return true;
+
 }
 
 
@@ -455,16 +1376,14 @@ function showOrderDetails(order) {
         );
 
 
-    if (oldDetails) {
+    if (
+        oldDetails
+    ) {
 
         oldDetails.remove();
 
     }
 
-
-    // ========================================
-    // OVERLAY
-    // ========================================
 
     const overlay =
         createElement(
@@ -476,10 +1395,6 @@ function showOrderDetails(order) {
     overlay.id =
         "orderDetailsPanel";
 
-
-    // ========================================
-    // PANEL
-    // ========================================
 
     const panel =
         createElement(
@@ -518,7 +1433,7 @@ function showOrderDetails(order) {
             "h2",
             null,
             order.orderNumber ||
-            "Order"
+                "Order"
         );
 
 
@@ -536,9 +1451,11 @@ function showOrderDetails(order) {
         eyebrow
     );
 
+
     headerInfo.appendChild(
         title
     );
+
 
     headerInfo.appendChild(
         createdTime
@@ -566,6 +1483,7 @@ function showOrderDetails(order) {
     header.appendChild(
         headerInfo
     );
+
 
     header.appendChild(
         closeButton
@@ -595,13 +1513,15 @@ function showOrderDetails(order) {
         createElement(
             "span",
             "order-details-status",
-            order.status || "New"
+            order.status ||
+                "New"
         );
 
 
     statusRow.appendChild(
         statusLabel
     );
+
 
     statusRow.appendChild(
         statusBadge
@@ -638,7 +1558,7 @@ function showOrderDetails(order) {
             "strong",
             null,
             order.documentName ||
-            "Document"
+                "Document"
         );
 
 
@@ -647,7 +1567,10 @@ function showOrderDetails(order) {
             "span",
             null,
             `${order.totalPages || 1} ${
-                Number(order.totalPages || 1) === 1
+                Number(
+                    order.totalPages ||
+                    1
+                ) === 1
                     ? "page"
                     : "pages"
             }`
@@ -658,6 +1581,7 @@ function showOrderDetails(order) {
         documentName
     );
 
+
     documentInfo.appendChild(
         documentMeta
     );
@@ -666,6 +1590,7 @@ function showOrderDetails(order) {
     documentBox.appendChild(
         documentIcon
     );
+
 
     documentBox.appendChild(
         documentInfo
@@ -723,6 +1648,7 @@ function showOrderDetails(order) {
             itemLabel
         );
 
+
         item.appendChild(
             itemValue
         );
@@ -738,40 +1664,46 @@ function showOrderDetails(order) {
     addDetail(
         "Total Pages",
         String(
-            order.totalPages || 1
+            order.totalPages ||
+            1
         )
     );
 
 
     addDetail(
         "Pages to Print",
-        order.pageRange || "All"
+        order.pageRange ||
+            "All"
     );
 
 
     addDetail(
         "Copies",
         String(
-            order.copies || 1
+            order.copies ||
+            1
         )
     );
 
 
     addDetail(
         "Paper Size",
-        order.paperSize || "A4"
+        order.paperSize ||
+            "A4"
     );
 
 
     addDetail(
         "Print Type",
-        order.printType || "B&W"
+        order.printType ||
+            "B&W"
     );
 
 
     addDetail(
         "Print Sides",
-        order.printSides || "Single"
+        order.printSides ||
+            "Single"
     );
 
 
@@ -798,10 +1730,11 @@ function showOrderDetails(order) {
         createElement(
             "strong",
             null,
-            order.status === "Cancelled"
+            order.status ===
+                "Cancelled"
                 ? "₹0"
                 : formatPrice(
-                    order.finalPrice ||
+                    order.finalPrice ??
                     order.estimatedPrice
                 )
         );
@@ -810,6 +1743,7 @@ function showOrderDetails(order) {
     priceBox.appendChild(
         priceLabel
     );
+
 
     priceBox.appendChild(
         priceValue
@@ -851,13 +1785,10 @@ function showOrderDetails(order) {
         "button";
 
 
-    // ========================================
-    // CLOSE DETAILS
-    // ========================================
-
     function closeDetails() {
 
         overlay.remove();
+
 
         document.body.style.overflow =
             "";
@@ -882,7 +1813,8 @@ function showOrderDetails(order) {
         function (event) {
 
             if (
-                event.target === overlay
+                event.target ===
+                overlay
             ) {
 
                 closeDetails();
@@ -898,7 +1830,8 @@ function showOrderDetails(order) {
     // ========================================
 
     if (
-        order.status === "New"
+        order.status ===
+        "New"
     ) {
 
         const printButton =
@@ -915,23 +1848,52 @@ function showOrderDetails(order) {
 
         printButton.addEventListener(
             "click",
-            function () {
+            async function () {
 
-                const updated =
-                    updateOrderStatus(
+                printButton.disabled =
+                    true;
+
+
+                printButton.textContent =
+                    "UPDATING...";
+
+
+                try {
+
+                    await updateOrderStatus(
                         order.orderNumber,
                         "Printing"
                     );
 
 
-                if (!updated) {
-                    return;
+                    closeDetails();
+
+
+                    await loadOrders();
+
                 }
 
+                catch (error) {
 
-                closeDetails();
+                    console.error(
+                        error
+                    );
 
-                renderOrders();
+
+                    alert(
+                        error.message ||
+                        "Could not update the order."
+                    );
+
+
+                    printButton.disabled =
+                        false;
+
+
+                    printButton.textContent =
+                        "PRINT ORDER";
+
+                }
 
             }
         );
@@ -940,6 +1902,7 @@ function showOrderDetails(order) {
         actions.appendChild(
             backButton
         );
+
 
         actions.appendChild(
             printButton
@@ -953,7 +1916,8 @@ function showOrderDetails(order) {
     // ========================================
 
     else if (
-        order.status === "Printing"
+        order.status ===
+        "Printing"
     ) {
 
         const completeButton =
@@ -970,7 +1934,7 @@ function showOrderDetails(order) {
 
         completeButton.addEventListener(
             "click",
-            function () {
+            async function () {
 
                 const confirmed =
                     confirm(
@@ -980,26 +1944,59 @@ function showOrderDetails(order) {
                     );
 
 
-                if (!confirmed) {
+                if (
+                    !confirmed
+                ) {
+
                     return;
+
                 }
 
 
-                const updated =
-                    updateOrderStatus(
+                completeButton.disabled =
+                    true;
+
+
+                completeButton.textContent =
+                    "UPDATING...";
+
+
+                try {
+
+                    await updateOrderStatus(
                         order.orderNumber,
                         "Completed"
                     );
 
 
-                if (!updated) {
-                    return;
+                    closeDetails();
+
+
+                    await loadOrders();
+
                 }
 
+                catch (error) {
 
-                closeDetails();
+                    console.error(
+                        error
+                    );
 
-                renderOrders();
+
+                    alert(
+                        error.message ||
+                        "Could not complete the order."
+                    );
+
+
+                    completeButton.disabled =
+                        false;
+
+
+                    completeButton.textContent =
+                        "MARK COMPLETED";
+
+                }
 
             }
         );
@@ -1008,6 +2005,7 @@ function showOrderDetails(order) {
         actions.appendChild(
             backButton
         );
+
 
         actions.appendChild(
             completeButton
@@ -1037,29 +2035,36 @@ function showOrderDetails(order) {
         header
     );
 
+
     panel.appendChild(
         statusRow
     );
+
 
     panel.appendChild(
         documentBox
     );
 
+
     panel.appendChild(
         settingsTitle
     );
+
 
     panel.appendChild(
         settingsGrid
     );
 
+
     panel.appendChild(
         priceBox
     );
 
+
     panel.appendChild(
         note
     );
+
 
     panel.appendChild(
         actions
@@ -1078,6 +2083,7 @@ function showOrderDetails(order) {
 
     document.body.style.overflow =
         "hidden";
+
 }
 
 
@@ -1116,7 +2122,7 @@ function createOrderCard(order) {
             "strong",
             null,
             order.orderNumber ||
-            "Unknown Order"
+                "Unknown Order"
         );
 
 
@@ -1134,6 +2140,7 @@ function createOrderCard(order) {
         orderNumberElement
     );
 
+
     orderInfo.appendChild(
         orderDate
     );
@@ -1143,13 +2150,15 @@ function createOrderCard(order) {
         createElement(
             "span",
             "order-status",
-            order.status || "New"
+            order.status ||
+                "New"
         );
 
 
     header.appendChild(
         orderInfo
     );
+
 
     header.appendChild(
         status
@@ -1186,13 +2195,14 @@ function createOrderCard(order) {
             "strong",
             null,
             order.documentName ||
-            "Document"
+                "Document"
         );
 
 
     const totalPages =
         Number(
-            order.totalPages || 1
+            order.totalPages ||
+            1
         );
 
 
@@ -1212,6 +2222,7 @@ function createOrderCard(order) {
         documentName
     );
 
+
     documentInfo.appendChild(
         documentMeta
     );
@@ -1220,6 +2231,7 @@ function createOrderCard(order) {
     documentRow.appendChild(
         documentIcon
     );
+
 
     documentRow.appendChild(
         documentInfo
@@ -1251,7 +2263,8 @@ function createOrderCard(order) {
 
     const copies =
         Number(
-            order.copies || 1
+            order.copies ||
+            1
         );
 
 
@@ -1270,6 +2283,7 @@ function createOrderCard(order) {
     settings.appendChild(
         settingsText
     );
+
 
     settings.appendChild(
         copiesText
@@ -1299,16 +2313,20 @@ function createOrderCard(order) {
         createElement(
             "strong",
             null,
-            formatPrice(
-                order.finalPrice ||
-                order.estimatedPrice
-            )
+            order.status ===
+                "Cancelled"
+                ? "₹0"
+                : formatPrice(
+                    order.finalPrice ??
+                    order.estimatedPrice
+                )
         );
 
 
     priceRow.appendChild(
         priceLabel
     );
+
 
     priceRow.appendChild(
         price
@@ -1338,20 +2356,20 @@ function createOrderCard(order) {
         "button";
 
 
-    const deleteButton =
+    const cancelButton =
         createElement(
             "button",
             "owner-delete-button",
-            "DELETE"
+            "CANCEL"
         );
 
 
-    deleteButton.type =
+    cancelButton.type =
         "button";
 
 
     // ========================================
-    // VIEW ORDER
+    // VIEW
     // ========================================
 
     viewButton.addEventListener(
@@ -1367,12 +2385,12 @@ function createOrderCard(order) {
 
 
     // ========================================
-    // CANCEL ORDER
+    // CANCEL
     // ========================================
 
-    deleteButton.addEventListener(
+    cancelButton.addEventListener(
         "click",
-        function () {
+        async function () {
 
             const shouldCancel =
                 confirm(
@@ -1383,24 +2401,56 @@ function createOrderCard(order) {
                 );
 
 
-            if (!shouldCancel) {
+            if (
+                !shouldCancel
+            ) {
+
                 return;
+
             }
 
 
-            const updated =
-                updateOrderStatus(
+            cancelButton.disabled =
+                true;
+
+
+            cancelButton.textContent =
+                "CANCELLING...";
+
+
+            try {
+
+                await updateOrderStatus(
                     order.orderNumber,
                     "Cancelled"
                 );
 
 
-            if (!updated) {
-                return;
+                await loadOrders();
+
             }
 
+            catch (error) {
 
-            renderOrders();
+                console.error(
+                    error
+                );
+
+
+                alert(
+                    error.message ||
+                    "Could not cancel the order."
+                );
+
+
+                cancelButton.disabled =
+                    false;
+
+
+                cancelButton.textContent =
+                    "CANCEL";
+
+            }
 
         }
     );
@@ -1410,8 +2460,9 @@ function createOrderCard(order) {
         viewButton
     );
 
+
     actions.appendChild(
-        deleteButton
+        cancelButton
     );
 
 
@@ -1423,17 +2474,21 @@ function createOrderCard(order) {
         header
     );
 
+
     card.appendChild(
         documentRow
     );
+
 
     card.appendChild(
         settings
     );
 
+
     card.appendChild(
         priceRow
     );
+
 
     card.appendChild(
         actions
@@ -1441,6 +2496,7 @@ function createOrderCard(order) {
 
 
     return card;
+
 }
 
 
@@ -1448,14 +2504,12 @@ function createOrderCard(order) {
 // RENDER ORDERS
 // ============================================
 
-function renderOrders() {
+function renderOrders(
+    orders
+) {
 
     document.body.style.overflow =
         "";
-
-
-    const orders =
-        getSavedOrders();
 
 
     updateSummary(
@@ -1468,14 +2522,16 @@ function renderOrders() {
 
 
     // ========================================
-    // ACTIVE ORDERS ONLY
+    // ACTIVE ORDERS
     // ========================================
 
     const activeOrders =
         orders.filter(
             order =>
-                order.status !== "Completed" &&
-                order.status !== "Cancelled"
+                order.status !==
+                    "Completed" &&
+                order.status !==
+                    "Cancelled"
         );
 
 
@@ -1484,7 +2540,8 @@ function renderOrders() {
     // ========================================
 
     if (
-        activeOrders.length === 0
+        activeOrders.length ===
+        0
     ) {
 
         const emptyState =
@@ -1522,9 +2579,11 @@ function renderOrders() {
             emptyIcon
         );
 
+
         emptyState.appendChild(
             emptyTitle
         );
+
 
         emptyState.appendChild(
             emptyText
@@ -1545,11 +2604,18 @@ function renderOrders() {
     // ========================================
 
     activeOrders.sort(
-        function (a, b) {
+        function (
+            a,
+            b
+        ) {
 
             return (
-                new Date(b.createdAt) -
-                new Date(a.createdAt)
+                new Date(
+                    b.createdAt
+                ) -
+                new Date(
+                    a.createdAt
+                )
             );
 
         }
@@ -1557,29 +2623,192 @@ function renderOrders() {
 
 
     // ========================================
-    // ADD ORDER CARDS
+    // CARDS
     // ========================================
 
     activeOrders.forEach(
-        function (order) {
-
-            const card =
-                createOrderCard(
-                    order
-                );
-
+        function (
+            order
+        ) {
 
             ordersList.appendChild(
-                card
+                createOrderCard(
+                    order
+                )
             );
 
         }
     );
+
 }
 
 
 // ============================================
-// INITIAL LOAD
+// LOAD ORDERS
 // ============================================
 
-renderOrders();
+async function loadOrders() {
+
+    if (
+        isLoadingOrders
+    ) {
+
+        return;
+
+    }
+
+
+    isLoadingOrders =
+        true;
+
+
+    try {
+
+        const orders =
+            await getOnlineOrders();
+
+
+        renderOrders(
+            orders
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Could not load orders:",
+            error
+        );
+
+
+        if (
+            error.code ===
+            "PGRST301" ||
+            error.code ===
+            "42501"
+        ) {
+
+            alert(
+                "Your owner account does not currently have permission to view orders."
+            );
+
+        }
+
+        else {
+
+            console.error(
+                "Owner dashboard error:",
+                error.message ||
+                error
+            );
+
+        }
+
+    }
+
+    finally {
+
+        isLoadingOrders =
+            false;
+
+    }
+
+}
+
+
+// ============================================
+// AUTO REFRESH
+// ============================================
+
+function startAutoRefresh() {
+
+    if (
+        refreshTimer
+    ) {
+
+        clearInterval(
+            refreshTimer
+        );
+
+    }
+
+
+    refreshTimer =
+        setInterval(
+            function () {
+
+                loadOrders();
+
+            },
+            5000
+        );
+
+}
+
+
+// ============================================
+// START OWNER APP
+// ============================================
+
+async function startOwnerApp() {
+
+    // ========================================
+    // INITIALIZE SUPABASE
+    // ========================================
+
+    const connected =
+        await initializeSupabase();
+
+
+    if (
+        !connected
+    ) {
+
+        alert(
+            "PrintFlow could not connect to Supabase."
+        );
+
+
+        return;
+    }
+
+
+    // ========================================
+    // CHECK LOGIN
+    // ========================================
+
+    const loggedIn =
+        await checkOwnerSession();
+
+
+    if (
+        !loggedIn
+    ) {
+
+        showLoginScreen();
+
+        return;
+    }
+
+
+    // ========================================
+    // OWNER IS LOGGED IN
+    // ========================================
+
+    addSignOutButton();
+
+
+    await loadOrders();
+
+
+    startAutoRefresh();
+
+}
+
+
+// ============================================
+// START
+// ============================================
+
+startOwnerApp();
