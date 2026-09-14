@@ -1,5 +1,7 @@
-const ordersStorageKey =
-    "printFlowOrders";
+// ============================================
+// PRINTFLOW SALES & HISTORY
+// SUPABASE VERSION
+// ============================================
 
 
 // ============================================
@@ -57,47 +59,77 @@ let currentPeriod =
 
 
 // ============================================
-// GET SAVED ORDERS
+// ALL ORDERS FROM SUPABASE
 // ============================================
 
-function getSavedOrders() {
-
-    try {
-
-        const savedOrders =
-            localStorage.getItem(
-                ordersStorageKey
-            );
+let allOrders = [];
 
 
-        if (!savedOrders) {
-            return [];
-        }
+// ============================================
+// SUPABASE ORDER → PAGE ORDER
+// ============================================
 
+function mapDatabaseOrder(order) {
 
-        const orders =
-            JSON.parse(savedOrders);
+    return {
 
+        id:
+            order.id,
 
-        if (!Array.isArray(orders)) {
-            return [];
-        }
+        orderNumber:
+            order.order_number,
 
+        documentName:
+            order.document_name,
 
-        return orders;
+        fileType:
+            order.file_type,
 
-    }
+        fileSize:
+            order.file_size,
 
-    catch (error) {
+        totalPages:
+            order.total_pages,
 
-        console.error(
-            "Could not read saved orders:",
-            error
-        );
+        selectedPages:
+            order.selected_pages,
 
+        pageRange:
+            order.page_range,
 
-        return [];
-    }
+        copies:
+            order.copies,
+
+        paperSize:
+            order.paper_size,
+
+        printType:
+            order.print_type,
+
+        printSides:
+            order.print_sides,
+
+        estimatedPrice:
+            order.estimated_price,
+
+        finalPrice:
+            order.final_price,
+
+        status:
+            order.status,
+
+        createdAt:
+            order.created_at,
+
+        printingStartedAt:
+            order.printing_started_at,
+
+        completedAt:
+            order.completed_at,
+
+        cancelledAt:
+            order.cancelled_at
+    };
 }
 
 
@@ -113,7 +145,6 @@ function getNumericPrice(price) {
     ) {
 
         return price;
-
     }
 
 
@@ -137,7 +168,6 @@ function getNumericPrice(price) {
         ) {
 
             return numericValue;
-
         }
     }
 
@@ -152,9 +182,18 @@ function getNumericPrice(price) {
 
 function formatPrice(price) {
 
+    const numericPrice =
+        getNumericPrice(price);
+
+
     return (
         "₹" +
-        getNumericPrice(price)
+        numericPrice.toLocaleString(
+            "en-IN",
+            {
+                maximumFractionDigits: 2
+            }
+        )
     );
 }
 
@@ -166,6 +205,7 @@ function formatPrice(price) {
 function formatDateTime(dateString) {
 
     if (!dateString) {
+
         return "Unknown time";
     }
 
@@ -201,6 +241,7 @@ function formatDateTime(dateString) {
 function getDateOnly(dateString) {
 
     if (!dateString) {
+
         return null;
     }
 
@@ -242,6 +283,7 @@ function isDateBetween(
 
 
     if (!orderDate) {
+
         return false;
     }
 
@@ -254,7 +296,7 @@ function isDateBetween(
 
 
 // ============================================
-// GET START OF TODAY
+// TODAY START
 // ============================================
 
 function getTodayStart() {
@@ -272,7 +314,7 @@ function getTodayStart() {
 
 
 // ============================================
-// GET END OF TODAY
+// TODAY END
 // ============================================
 
 function getTodayEnd() {
@@ -290,7 +332,7 @@ function getTodayEnd() {
 
 
 // ============================================
-// GET CURRENT MONTH RANGE
+// CURRENT MONTH RANGE
 // ============================================
 
 function getCurrentMonthRange() {
@@ -316,14 +358,18 @@ function getCurrentMonthRange() {
 
 
     return {
-        start: start,
-        end: end
+
+        start:
+            start,
+
+        end:
+            end
     };
 }
 
 
 // ============================================
-// GET CURRENT YEAR RANGE
+// CURRENT YEAR RANGE
 // ============================================
 
 function getCurrentYearRange() {
@@ -349,21 +395,24 @@ function getCurrentYearRange() {
 
 
     return {
-        start: start,
-        end: end
+
+        start:
+            start,
+
+        end:
+            end
     };
 }
 
 
 // ============================================
-// GET SELECTED DATE RANGE
+// CUSTOM DATE RANGE
 // ============================================
 
 function getCustomDateRange() {
 
     const startValue =
         startDateInput.value;
-
 
     const endValue =
         endDateInput.value;
@@ -380,7 +429,6 @@ function getCustomDateRange() {
 
     const startParts =
         startValue.split("-");
-
 
     const endParts =
         endValue.split("-");
@@ -424,14 +472,18 @@ function getCustomDateRange() {
 
 
     return {
-        start: start,
-        end: end
+
+        start:
+            start,
+
+        end:
+            end
     };
 }
 
 
 // ============================================
-// GET ORDER HISTORY DATE
+// HISTORY DATE
 // ============================================
 
 function getHistoryDate(order) {
@@ -450,19 +502,15 @@ function getHistoryDate(order) {
 
 function getFilteredOrders() {
 
-    const orders =
-        getSavedOrders();
-
-
-    // ========================================
-    // COMPLETED + CANCELLED ONLY
-    // ========================================
-
     const historyOrders =
-        orders.filter(
-            order =>
-                order.status === "Completed" ||
-                order.status === "Cancelled"
+        allOrders.filter(
+            function (order) {
+
+                return (
+                    order.status === "Completed" ||
+                    order.status === "Cancelled"
+                );
+            }
         );
 
 
@@ -482,12 +530,14 @@ function getFilteredOrders() {
 
 
         return historyOrders.filter(
-            order =>
-                isDateBetween(
+            function (order) {
+
+                return isDateBetween(
                     getHistoryDate(order),
                     start,
                     end
-                )
+                );
+            }
         );
     }
 
@@ -505,12 +555,14 @@ function getFilteredOrders() {
 
 
         return historyOrders.filter(
-            order =>
-                isDateBetween(
+            function (order) {
+
+                return isDateBetween(
                     getHistoryDate(order),
                     range.start,
                     range.end
-                )
+                );
+            }
         );
     }
 
@@ -528,12 +580,14 @@ function getFilteredOrders() {
 
 
         return historyOrders.filter(
-            order =>
-                isDateBetween(
+            function (order) {
+
+                return isDateBetween(
                     getHistoryDate(order),
                     range.start,
                     range.end
-                )
+                );
+            }
         );
     }
 
@@ -554,15 +608,23 @@ function updateSummary(orders) {
 
     const completedOrders =
         orders.filter(
-            order =>
-                order.status === "Completed"
+            function (order) {
+
+                return (
+                    order.status === "Completed"
+                );
+            }
         );
 
 
     const cancelledOrders =
         orders.filter(
-            order =>
-                order.status === "Cancelled"
+            function (order) {
+
+                return (
+                    order.status === "Cancelled"
+                );
+            }
         );
 
 
@@ -570,21 +632,24 @@ function updateSummary(orders) {
         completedOrders.reduce(
             function (total, order) {
 
+                const price =
+                    order.finalPrice !== null &&
+                    order.finalPrice !== undefined
+                        ? order.finalPrice
+                        : order.estimatedPrice;
+
+
                 return (
                     total +
-                    getNumericPrice(
-                        order.finalPrice ||
-                        order.estimatedPrice
-                    )
+                    getNumericPrice(price)
                 );
-
             },
             0
         );
 
 
     salesTotal.textContent =
-        "₹" + totalSales;
+        formatPrice(totalSales);
 
 
     salesCompletedOrders.textContent =
@@ -622,7 +687,6 @@ function createElement(
 
         element.className =
             className;
-
     }
 
 
@@ -632,7 +696,6 @@ function createElement(
 
         element.textContent =
             text;
-
     }
 
 
@@ -655,7 +718,6 @@ function showHistoryOrderDetails(order) {
     if (oldDetails) {
 
         oldDetails.remove();
-
     }
 
 
@@ -697,9 +759,7 @@ function showHistoryOrderDetails(order) {
 
 
     const heading =
-        createElement(
-            "div"
-        );
+        createElement("div");
 
 
     const eyebrow =
@@ -825,9 +885,7 @@ function showHistoryOrderDetails(order) {
 
 
     const documentInfo =
-        createElement(
-            "div"
-        );
+        createElement("div");
 
 
     const documentName =
@@ -839,12 +897,18 @@ function showHistoryOrderDetails(order) {
         );
 
 
+    const pageCount =
+        Number(
+            order.totalPages || 1
+        );
+
+
     const documentMeta =
         createElement(
             "span",
             null,
-            `${order.totalPages || 1} ${
-                Number(order.totalPages || 1) === 1
+            `${pageCount} ${
+                pageCount === 1
                     ? "page"
                     : "pages"
             }`
@@ -870,7 +934,7 @@ function showHistoryOrderDetails(order) {
 
 
     // ========================================
-    // DETAILS
+    // DETAILS TITLE
     // ========================================
 
     const settingsTitle =
@@ -880,6 +944,10 @@ function showHistoryOrderDetails(order) {
             "Print Details"
         );
 
+
+    // ========================================
+    // DETAILS GRID
+    // ========================================
 
     const detailsGrid =
         createElement(
@@ -992,6 +1060,13 @@ function showHistoryOrderDetails(order) {
         );
 
 
+    const selectedPrice =
+        order.finalPrice !== null &&
+        order.finalPrice !== undefined
+            ? order.finalPrice
+            : order.estimatedPrice;
+
+
     const priceValue =
         createElement(
             "strong",
@@ -999,8 +1074,7 @@ function showHistoryOrderDetails(order) {
             order.status === "Cancelled"
                 ? "₹0"
                 : formatPrice(
-                    order.finalPrice ||
-                    order.estimatedPrice
+                    selectedPrice
                 )
         );
 
@@ -1015,7 +1089,7 @@ function showHistoryOrderDetails(order) {
 
 
     // ========================================
-    // CLOSE BUTTON
+    // CLOSE
     // ========================================
 
     function closeDetails() {
@@ -1024,7 +1098,6 @@ function showHistoryOrderDetails(order) {
 
         document.body.style.overflow =
             "";
-
     }
 
 
@@ -1043,15 +1116,13 @@ function showHistoryOrderDetails(order) {
             ) {
 
                 closeDetails();
-
             }
-
         }
     );
 
 
     // ========================================
-    // ACTION
+    // ACTIONS
     // ========================================
 
     const actions =
@@ -1206,12 +1277,18 @@ function createHistoryRow(order) {
         );
 
 
+    const copies =
+        Number(
+            order.copies || 1
+        );
+
+
     const copiesText =
         createElement(
             "small",
             null,
-            `${order.copies || 1} ${
-                Number(order.copies || 1) === 1
+            `${copies} ${
+                copies === 1
                     ? "copy"
                     : "copies"
             }`
@@ -1270,17 +1347,21 @@ function createHistoryRow(order) {
 
         price.textContent =
             "₹0";
-
     }
 
     else {
 
+        const selectedPrice =
+            order.finalPrice !== null &&
+            order.finalPrice !== undefined
+                ? order.finalPrice
+                : order.estimatedPrice;
+
+
         price.textContent =
             formatPrice(
-                order.finalPrice ||
-                order.estimatedPrice
+                selectedPrice
             );
-
     }
 
 
@@ -1307,7 +1388,6 @@ function createHistoryRow(order) {
             showHistoryOrderDetails(
                 order
             );
-
         }
     );
 
@@ -1320,26 +1400,21 @@ function createHistoryRow(order) {
         orderInfo
     );
 
-
     row.appendChild(
         settings
     );
-
 
     row.appendChild(
         date
     );
 
-
     row.appendChild(
         status
     );
 
-
     row.appendChild(
         price
     );
-
 
     row.appendChild(
         viewButton
@@ -1434,10 +1509,18 @@ function renderHistory(
 
 
     // ========================================
+    // COPY BEFORE SORTING
+    // ========================================
+
+    const sortedOrders =
+        [...filteredOrders];
+
+
+    // ========================================
     // NEWEST FIRST
     // ========================================
 
-    filteredOrders.sort(
+    sortedOrders.sort(
         function (a, b) {
 
             return (
@@ -1448,7 +1531,6 @@ function renderHistory(
                     getHistoryDate(a)
                 )
             );
-
         }
     );
 
@@ -1457,7 +1539,7 @@ function renderHistory(
     // ADD ROWS
     // ========================================
 
-    filteredOrders.forEach(
+    sortedOrders.forEach(
         function (order) {
 
             salesHistoryList.appendChild(
@@ -1465,9 +1547,206 @@ function renderHistory(
                     order
                 )
             );
-
         }
     );
+}
+
+
+// ============================================
+// LOAD ORDERS FROM SUPABASE
+// ============================================
+
+async function loadOrdersFromSupabase() {
+
+    salesHistoryList.innerHTML = "";
+
+
+    const loading =
+        createElement(
+            "div",
+            "sales-empty-state"
+        );
+
+
+    loading.appendChild(
+        createElement(
+            "div",
+            "empty-icon",
+            "…"
+        )
+    );
+
+
+    loading.appendChild(
+        createElement(
+            "h3",
+            null,
+            "Loading sales history"
+        )
+    );
+
+
+    loading.appendChild(
+        createElement(
+            "p",
+            null,
+            "Getting orders from PrintFlow."
+        )
+    );
+
+
+    salesHistoryList.appendChild(
+        loading
+    );
+
+
+    try {
+
+        // ====================================
+        // CHECK SUPABASE
+        // ====================================
+
+        if (
+            !window.supabaseClient
+        ) {
+
+            throw new Error(
+                "Supabase client is not available."
+            );
+        }
+
+
+        // ====================================
+        // GET LOGGED-IN OWNER
+        // ====================================
+
+        const {
+            data: sessionData,
+            error: sessionError
+        } =
+            await window.supabaseClient
+                .auth
+                .getSession();
+
+
+        if (sessionError) {
+
+            throw new Error(
+                sessionError.message
+            );
+        }
+
+
+        if (
+            !sessionData ||
+            !sessionData.session
+        ) {
+
+            throw new Error(
+                "Please log in as owner first."
+            );
+        }
+
+
+        // ====================================
+        // GET ORDERS
+        // ====================================
+
+        const {
+            data,
+            error
+        } =
+            await window.supabaseClient
+                .from("orders")
+                .select("*")
+                .order(
+                    "created_at",
+                    {
+                        ascending: false
+                    }
+                );
+
+
+        if (error) {
+
+            throw new Error(
+                error.message
+            );
+        }
+
+
+        // ====================================
+        // MAP DATABASE DATA
+        // ====================================
+
+        allOrders =
+            Array.isArray(data)
+                ? data.map(
+                    mapDatabaseOrder
+                )
+                : [];
+
+
+        // ====================================
+        // RENDER
+        // ====================================
+
+        renderHistory();
+
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Could not load sales history:",
+            error
+        );
+
+
+        salesHistoryList.innerHTML =
+            "";
+
+
+        const empty =
+            createElement(
+                "div",
+                "sales-empty-state"
+            );
+
+
+        empty.appendChild(
+            createElement(
+                "div",
+                "empty-icon",
+                "!"
+            )
+        );
+
+
+        empty.appendChild(
+            createElement(
+                "h3",
+                null,
+                "Could not load sales history"
+            )
+        );
+
+
+        empty.appendChild(
+            createElement(
+                "p",
+                null,
+                error.message ||
+                "Something went wrong while loading orders."
+            )
+        );
+
+
+        salesHistoryList.appendChild(
+            empty
+        );
+    }
 }
 
 
@@ -1488,7 +1767,6 @@ filterButtons.forEach(
                         otherButton.classList.remove(
                             "active"
                         );
-
                     }
                 );
 
@@ -1503,10 +1781,8 @@ filterButtons.forEach(
 
 
                 renderHistory();
-
             }
         );
-
     }
 );
 
@@ -1539,38 +1815,38 @@ applyDateFilterButton.addEventListener(
                 button.classList.remove(
                     "active"
                 );
-
             }
         );
 
 
-        const orders =
-            getSavedOrders();
-
-
         const historyOrders =
-            orders.filter(
-                order =>
-                    order.status === "Completed" ||
-                    order.status === "Cancelled"
+            allOrders.filter(
+                function (order) {
+
+                    return (
+                        order.status === "Completed" ||
+                        order.status === "Cancelled"
+                    );
+                }
             );
 
 
         const filteredOrders =
             historyOrders.filter(
-                order =>
-                    isDateBetween(
+                function (order) {
+
+                    return isDateBetween(
                         getHistoryDate(order),
                         range.start,
                         range.end
-                    )
+                    );
+                }
             );
 
 
         renderHistory(
             filteredOrders
         );
-
     }
 );
 
@@ -1579,4 +1855,4 @@ applyDateFilterButton.addEventListener(
 // INITIAL LOAD
 // ============================================
 
-renderHistory();
+loadOrdersFromSupabase();
