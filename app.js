@@ -77,38 +77,24 @@ const newRequestButton =
 
 function getSupabaseClient() {
 
-    if (
-        !window.supabase
-    ) {
+    if (!window.supabase) {
 
         throw new Error(
             "Supabase library is not loaded."
         );
-
     }
 
 
-    if (
-        !window.supabaseClient
-    ) {
+    if (!window.supabaseClient) {
 
         throw new Error(
             "Supabase client is not configured."
         );
-
     }
 
 
     return window.supabaseClient;
 }
-
-
-// ============================================
-// PDF.JS WORKER
-// ============================================
-
-pdfjsLib.GlobalWorkerOptions.workerSrc =
-    "./pdfjs/pdf.worker.min.mjs";
 
 
 // ============================================
@@ -127,6 +113,68 @@ const allowedTypes = [
 
 const maxFileSize =
     25 * 1024 * 1024;
+
+
+// ============================================
+// CHECK PDF
+// ============================================
+
+function isPdfFile(file) {
+
+    if (!file) {
+        return false;
+    }
+
+
+    if (
+        file.type ===
+        "application/pdf"
+    ) {
+
+        return true;
+    }
+
+
+    return (
+        file.name
+            .toLowerCase()
+            .endsWith(".pdf")
+    );
+}
+
+
+// ============================================
+// CHECK SUPPORTED FILE
+// ============================================
+
+function isSupportedFile(file) {
+
+    if (!file) {
+        return false;
+    }
+
+
+    if (
+        allowedTypes.includes(
+            file.type
+        )
+    ) {
+
+        return true;
+    }
+
+
+    const fileName =
+        file.name.toLowerCase();
+
+
+    return (
+        fileName.endsWith(".pdf") ||
+        fileName.endsWith(".jpg") ||
+        fileName.endsWith(".jpeg") ||
+        fileName.endsWith(".png")
+    );
+}
 
 
 // ============================================
@@ -165,9 +213,7 @@ fileInput.addEventListener(
         // ========================================
 
         if (
-            !allowedTypes.includes(
-                file.type
-            )
+            !isSupportedFile(file)
         ) {
 
             alert(
@@ -207,8 +253,7 @@ fileInput.addEventListener(
         // ========================================
 
         if (
-            file.type ===
-            "application/pdf"
+            isPdfFile(file)
         ) {
 
             try {
@@ -217,12 +262,28 @@ fileInput.addEventListener(
                     await file.arrayBuffer();
 
 
+                console.log(
+                    "Reading PDF:",
+                    file.name
+                );
+
+
+                // ==================================
+                // IMPORTANT:
+                // Disable PDF worker.
+                // This avoids GitHub Pages worker
+                // loading problems.
+                // ==================================
+
+                const loadingTask =
+                    pdfjsLib.getDocument({
+                        data: arrayBuffer,
+                        disableWorker: true
+                    });
+
+
                 const pdf =
-                    await pdfjsLib
-                        .getDocument({
-                            data: arrayBuffer
-                        })
-                        .promise;
+                    await loadingTask.promise;
 
 
                 totalPages =
@@ -234,19 +295,46 @@ fileInput.addEventListener(
                     totalPages
                 );
 
+
+                if (
+                    !totalPages ||
+                    totalPages < 1
+                ) {
+
+                    throw new Error(
+                        "PDF has no readable pages."
+                    );
+                }
+
             }
 
             catch (error) {
 
                 console.error(
-                    "PDF page counting failed:",
+                    "PDF reading failed:",
                     error
                 );
 
 
-                alert(
+                let errorMessage =
                     "We couldn't read this PDF.\n\n" +
-                    "Please try another PDF file."
+                    "Please try another PDF file.";
+
+
+                if (
+                    error &&
+                    error.message
+                ) {
+
+                    console.error(
+                        "PDF.js error message:",
+                        error.message
+                    );
+                }
+
+
+                alert(
+                    errorMessage
                 );
 
 
@@ -261,7 +349,6 @@ fileInput.addEventListener(
 
             totalPages =
                 1;
-
         }
 
 
@@ -285,8 +372,7 @@ fileInput.addEventListener(
 
 
         if (
-            file.type ===
-            "application/pdf"
+            isPdfFile(file)
         ) {
 
             fileType =
@@ -296,7 +382,13 @@ fileInput.addEventListener(
 
         else if (
             file.type ===
-            "image/jpeg"
+                "image/jpeg" ||
+            file.name
+                .toLowerCase()
+                .endsWith(".jpg") ||
+            file.name
+                .toLowerCase()
+                .endsWith(".jpeg")
         ) {
 
             fileType =
@@ -311,7 +403,6 @@ fileInput.addEventListener(
 
             fileType =
                 "PNG";
-
         }
 
 
@@ -333,7 +424,6 @@ fileInput.addEventListener(
 
 
         calculatePrice();
-
     }
 );
 
@@ -446,7 +536,6 @@ function getCopies() {
 
         copies =
             1;
-
     }
 
 
@@ -456,7 +545,6 @@ function getCopies() {
 
         copies =
             100;
-
     }
 
 
@@ -492,7 +580,6 @@ function getSelectedPageCount() {
     ) {
 
         return totalPages;
-
     }
 
 
@@ -514,7 +601,6 @@ function getSelectedPageCount() {
         ) {
 
             return 1;
-
         }
 
 
@@ -559,7 +645,6 @@ function getSelectedPageCount() {
                 start +
                 1
             );
-
         }
 
 
@@ -603,12 +688,9 @@ function getSelectedPageCount() {
             );
 
 
-        if (
-            !valid
-        ) {
+        if (!valid) {
 
             return 0;
-
         }
 
 
@@ -666,7 +748,6 @@ function calculatePrice() {
 
         pricePerPage =
             2;
-
     }
 
     else if (
@@ -676,7 +757,6 @@ function calculatePrice() {
 
         pricePerPage =
             10;
-
     }
 
     else if (
@@ -686,7 +766,6 @@ function calculatePrice() {
 
         pricePerPage =
             4;
-
     }
 
     else if (
@@ -696,7 +775,6 @@ function calculatePrice() {
 
         pricePerPage =
             20;
-
     }
 
 
@@ -788,7 +866,6 @@ async function saveOrderOnline(order) {
 
         status:
             "New"
-
     };
 
 
@@ -827,7 +904,6 @@ async function saveOrderOnline(order) {
         "Order successfully saved in Supabase:",
         order.orderNumber
     );
-
 }
 
 
@@ -875,7 +951,6 @@ sendRequestButton.addEventListener(
 
 
             pageRangeInput.focus();
-
 
             return;
         }
@@ -975,7 +1050,9 @@ sendRequestButton.addEventListener(
                 file.name,
 
             fileType:
-                file.type,
+                isPdfFile(file)
+                    ? "application/pdf"
+                    : file.type,
 
             fileSize:
                 file.size,
@@ -1009,7 +1086,6 @@ sendRequestButton.addEventListener(
 
             createdAt:
                 new Date().toISOString()
-
         };
 
 
@@ -1094,7 +1170,6 @@ sendRequestButton.addEventListener(
                 block: "start"
             });
 
-
         }
 
         catch (error) {
@@ -1123,7 +1198,6 @@ sendRequestButton.addEventListener(
 
             sendRequestButton.textContent =
                 "Send Print Request";
-
         }
 
     }
@@ -1194,7 +1268,6 @@ newRequestButton.addEventListener(
 
             defaultPaperSize.checked =
                 true;
-
         }
 
 
@@ -1214,7 +1287,6 @@ newRequestButton.addEventListener(
 
             defaultPrintType.checked =
                 true;
-
         }
 
 
@@ -1234,7 +1306,6 @@ newRequestButton.addEventListener(
 
             defaultPrintSides.checked =
                 true;
-
         }
 
 
@@ -1269,7 +1340,6 @@ document
                 "change",
                 calculatePrice
             );
-
         }
     );
 
@@ -1289,7 +1359,6 @@ document
                 "change",
                 calculatePrice
             );
-
         }
     );
 
@@ -1309,7 +1378,6 @@ document
                 "change",
                 calculatePrice
             );
-
         }
     );
 
