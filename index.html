@@ -1,513 +1,726 @@
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
 
-<meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
->
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-<title>PrintFlow</title>
+    <title>PrintFlow</title>
 
-<link
-    rel="stylesheet"
-    href="styles.css"
->
-
+    <link
+        rel="stylesheet"
+        href="styles.css"
+    >
 
 </head>
 
+
 <body>
 
-```
-<main class="page">
+    <main class="page">
 
-    <section class="hero">
+        <!-- =========================================
+             HERO
+             ========================================= -->
 
-        <div class="logo">
-            PrintFlow
-        </div>
+        <section class="hero">
 
-        <div class="hero-content">
+            <div class="logo">
+                PrintFlow
+            </div>
 
-            <p class="eyebrow">
-                QUICK & SIMPLE PRINTING
-            </p>
 
-            <h1>
-                Send your documents.<br>
-                Skip the waiting.
-            </h1>
+            <div class="hero-content">
 
-            <p class="hero-description">
-                Scan the shop QR, upload your document,
-                choose your print settings and send your
-                request in seconds.
-            </p>
+                <p class="eyebrow">
+                    QUICK &amp; SIMPLE PRINTING
+                </p>
 
-            <input
-                type="file"
-                id="fileInput"
-                accept=".pdf,.jpg,.jpeg,.png"
-                hidden
-            >
 
-            <button
-                class="upload-button"
-                id="uploadButton"
-                type="button"
-            >
-                Upload Document
-            </button>
+                <h1>
+                    Send your documents.<br>
+                    Skip the waiting.
+                </h1>
 
-            <p class="no-account">
-                No account • No phone number • No Gmail
-            </p>
 
-            <div class="file-card" id="fileCard">
+                <p class="hero-description">
+                    Scan the shop QR, upload your document,
+                    choose your print settings and send your
+                    request in seconds.
+                </p>
 
-                <div class="file-icon">
-                    📄
+
+                <!-- =====================================
+                     FILE INPUT
+                     ===================================== -->
+
+                <input
+                    type="file"
+                    id="fileInput"
+                    accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                    hidden
+                >
+
+
+                <!-- =====================================
+                     UPLOAD BUTTON
+                     ===================================== -->
+
+                <button
+                    class="upload-button"
+                    id="uploadButton"
+                    type="button"
+                >
+                    Upload Document
+                </button>
+
+
+                <p class="no-account">
+                    No account &bull; No phone number &bull; No Gmail
+                </p>
+
+
+                <!-- =====================================
+                     FILE CARD
+                     ===================================== -->
+
+                <div
+                    class="file-card"
+                    id="fileCard"
+                >
+
+                    <div class="file-icon">
+                        📄
+                    </div>
+
+
+                    <div class="file-details">
+
+                        <strong id="fileName">
+                            Document
+                        </strong>
+
+                        <span id="fileInfo">
+                            File selected
+                        </span>
+
+                    </div>
+
                 </div>
 
-                <div class="file-details">
-                    <strong id="fileName">Document</strong>
-                    <span id="fileInfo">File selected</span>
-                </div>
-
             </div>
 
-        </div>
+        </section>
 
-    </section>
 
+        <!-- =========================================
+             PRINT SETTINGS
+             ========================================= -->
 
-    <section class="print-settings" id="printSettings">
-
-        <div class="settings-header">
-
-            <p class="eyebrow">
-                PRINT DETAILS
-            </p>
-
-            <h2>
-                Choose your print settings
-            </h2>
-
-            <p>
-                Tell us how you want your document printed.
-            </p>
-
-        </div>
-
-
-        <!-- Paper Size -->
-
-        <div class="setting-group">
-
-            <label class="setting-title">
-                Paper Size
-            </label>
-
-            <div class="option-grid">
-
-                <label class="option-card">
-
-                    <input
-                        type="radio"
-                        name="paperSize"
-                        value="A4"
-                        checked
-                    >
-
-                    <span>
-                        <strong>A4</strong>
-                        <small>Standard paper</small>
-                    </span>
-
-                </label>
-
-
-                <label class="option-card">
-
-                    <input
-                        type="radio"
-                        name="paperSize"
-                        value="A3"
-                    >
-
-                    <span>
-                        <strong>A3</strong>
-                        <small>Large paper</small>
-                    </span>
-
-                </label>
-
-            </div>
-
-        </div>
-
-
-        <!-- Print Type -->
-
-        <div class="setting-group">
-
-            <label class="setting-title">
-                Print Type
-            </label>
-
-            <div class="option-grid">
-
-                <label class="option-card">
-
-                    <input
-                        type="radio"
-                        name="printType"
-                        value="B&W"
-                        checked
-                    >
-
-                    <span>
-                        <strong>Black &amp; White</strong>
-                        <small>Economical printing</small>
-                    </span>
-
-                </label>
-
-
-                <label class="option-card">
-
-                    <input
-                        type="radio"
-                        name="printType"
-                        value="Color"
-                    >
-
-                    <span>
-                        <strong>Color</strong>
-                        <small>Full color printing</small>
-                    </span>
-
-                </label>
-
-            </div>
-
-        </div>
-
-
-        <!-- Print Sides -->
-
-        <div class="setting-group">
-
-            <label class="setting-title">
-                Print Sides
-            </label>
-
-            <div class="option-grid">
-
-                <label class="option-card">
-
-                    <input
-                        type="radio"
-                        name="printSides"
-                        value="Single"
-                        checked
-                    >
-
-                    <span>
-                        <strong>Single Side</strong>
-                        <small>Print on one side</small>
-                    </span>
-
-                </label>
-
-
-                <label class="option-card">
-
-                    <input
-                        type="radio"
-                        name="printSides"
-                        value="Double"
-                    >
-
-                    <span>
-                        <strong>Double Side</strong>
-                        <small>Print on both sides</small>
-                    </span>
-
-                </label>
-
-            </div>
-
-        </div>
-
-
-        <!-- Copies -->
-
-        <div class="setting-group">
-
-            <label
-                class="setting-title"
-                for="copies"
-            >
-                Number of Copies
-            </label>
-
-            <input
-                class="number-input"
-                type="number"
-                id="copies"
-                min="1"
-                max="100"
-                value="1"
-            >
-
-        </div>
-
-
-        <!-- Page Selection -->
-
-        <div class="setting-group">
-
-            <label
-                class="setting-title"
-                for="pageRange"
-            >
-                Pages to Print
-            </label>
-
-            <input
-                class="text-input"
-                type="text"
-                id="pageRange"
-                value="All"
-                placeholder="Example: All or 1-5"
-            >
-
-            <small class="input-help">
-                Enter All, a range like 1-5, or pages like 1,3,5.
-            </small>
-
-        </div>
-
-
-        <!-- Price -->
-
-        <div class="price-summary">
-
-            <div>
-
-                <span>
-                    Estimated price
-                </span>
-
-                <strong id="estimatedPrice">
-                    ₹0
-                </strong>
-
-            </div>
-
-            <small>
-                Final price may be confirmed by the shop.
-            </small>
-
-        </div>
-
-
-        <button
-            class="send-button"
-            id="sendRequestButton"
-            type="button"
+        <section
+            class="print-settings"
+            id="printSettings"
         >
-            Send Print Request
-        </button>
 
-    </section>
+            <div class="settings-header">
+
+                <p class="eyebrow">
+                    PRINT DETAILS
+                </p>
 
 
-    <!-- SEND CONFIRMATION -->
+                <h2>
+                    Choose your print settings
+                </h2>
 
-    <section
-        class="confirmation-section"
-        id="confirmationSection"
-    >
 
-        <div class="confirmation-card">
-
-            <div class="confirmation-icon">
-                ✓
-            </div>
-
-            <p class="eyebrow">
-                REQUEST SENT
-            </p>
-
-            <h2>
-                Your print request is on its way.
-            </h2>
-
-            <p class="confirmation-message">
-                Show this order number at the shop
-                when you arrive.
-            </p>
-
-            <div class="order-number-box">
-
-                <span>
-                    Order Number
-                </span>
-
-                <strong id="orderNumber">
-                    PF-000001
-                </strong>
+                <p>
+                    Tell us how you want your document printed.
+                </p>
 
             </div>
 
-            <div class="confirmation-details">
 
-                <div>
-                    <span>Document</span>
-                    <strong id="confirmationFile">
-                        —
-                    </strong>
-                </div>
+            <!-- =====================================
+                 PAPER SIZE
+                 ===================================== -->
 
-                <div>
-                    <span>Pages</span>
-                    <strong id="confirmationPages">
-                        —
-                    </strong>
-                </div>
+            <div class="setting-group">
 
-                <div>
-                    <span>Copies</span>
-                    <strong id="confirmationCopies">
-                        —
-                    </strong>
-                </div>
+                <label class="setting-title">
+                    Paper Size
+                </label>
 
-                <div>
-                    <span>Paper Size</span>
-                    <strong id="confirmationPaperSize">
-                        —
-                    </strong>
-                </div>
 
-                <div>
-                    <span>Print Type</span>
-                    <strong id="confirmationPrintType">
-                        —
-                    </strong>
-                </div>
+                <div class="option-grid">
 
-                <div>
-                    <span>Print Sides</span>
-                    <strong id="confirmationPrintSides">
-                        —
-                    </strong>
-                </div>
+                    <label class="option-card">
 
-                <div>
-                    <span>Estimated Total</span>
-                    <strong id="confirmationPrice">
-                        —
-                    </strong>
+                        <input
+                            type="radio"
+                            name="paperSize"
+                            value="A4"
+                            checked
+                        >
+
+
+                        <span>
+
+                            <strong>
+                                A4
+                            </strong>
+
+                            <small>
+                                Standard paper
+                            </small>
+
+                        </span>
+
+                    </label>
+
+
+                    <label class="option-card">
+
+                        <input
+                            type="radio"
+                            name="paperSize"
+                            value="A3"
+                        >
+
+
+                        <span>
+
+                            <strong>
+                                A3
+                            </strong>
+
+                            <small>
+                                Large paper
+                            </small>
+
+                        </span>
+
+                    </label>
+
                 </div>
 
             </div>
+
+
+            <!-- =====================================
+                 PRINT TYPE
+                 ===================================== -->
+
+            <div class="setting-group">
+
+                <label class="setting-title">
+                    Print Type
+                </label>
+
+
+                <div class="option-grid">
+
+                    <label class="option-card">
+
+                        <input
+                            type="radio"
+                            name="printType"
+                            value="B&W"
+                            checked
+                        >
+
+
+                        <span>
+
+                            <strong>
+                                Black &amp; White
+                            </strong>
+
+                            <small>
+                                Economical printing
+                            </small>
+
+                        </span>
+
+                    </label>
+
+
+                    <label class="option-card">
+
+                        <input
+                            type="radio"
+                            name="printType"
+                            value="Color"
+                        >
+
+
+                        <span>
+
+                            <strong>
+                                Color
+                            </strong>
+
+                            <small>
+                                Full color printing
+                            </small>
+
+                        </span>
+
+                    </label>
+
+                </div>
+
+            </div>
+
+
+            <!-- =====================================
+                 PRINT SIDES
+                 ===================================== -->
+
+            <div class="setting-group">
+
+                <label class="setting-title">
+                    Print Sides
+                </label>
+
+
+                <div class="option-grid">
+
+                    <label class="option-card">
+
+                        <input
+                            type="radio"
+                            name="printSides"
+                            value="Single"
+                            checked
+                        >
+
+
+                        <span>
+
+                            <strong>
+                                Single Side
+                            </strong>
+
+                            <small>
+                                Print on one side
+                            </small>
+
+                        </span>
+
+                    </label>
+
+
+                    <label class="option-card">
+
+                        <input
+                            type="radio"
+                            name="printSides"
+                            value="Double"
+                        >
+
+
+                        <span>
+
+                            <strong>
+                                Double Side
+                            </strong>
+
+                            <small>
+                                Print on both sides
+                            </small>
+
+                        </span>
+
+                    </label>
+
+                </div>
+
+            </div>
+
+
+            <!-- =====================================
+                 COPIES
+                 ===================================== -->
+
+            <div class="setting-group">
+
+                <label
+                    class="setting-title"
+                    for="copies"
+                >
+                    Number of Copies
+                </label>
+
+
+                <input
+                    class="number-input"
+                    type="number"
+                    id="copies"
+                    min="1"
+                    max="100"
+                    value="1"
+                >
+
+            </div>
+
+
+            <!-- =====================================
+                 PAGE SELECTION
+                 ===================================== -->
+
+            <div class="setting-group">
+
+                <label
+                    class="setting-title"
+                    for="pageRange"
+                >
+                    Pages to Print
+                </label>
+
+
+                <input
+                    class="text-input"
+                    type="text"
+                    id="pageRange"
+                    value="All"
+                    placeholder="Example: All or 1-5"
+                >
+
+
+                <small class="input-help">
+                    Enter All, a range like 1-5,
+                    or pages like 1,3,5.
+                </small>
+
+            </div>
+
+
+            <!-- =====================================
+                 PRICE
+                 ===================================== -->
+
+            <div class="price-summary">
+
+                <div>
+
+                    <span>
+                        Estimated price
+                    </span>
+
+
+                    <strong id="estimatedPrice">
+                        ₹0
+                    </strong>
+
+                </div>
+
+
+                <small>
+                    Final price may be confirmed by the shop.
+                </small>
+
+            </div>
+
+
+            <!-- =====================================
+                 SEND REQUEST
+                 ===================================== -->
 
             <button
-                class="new-request-button"
-                id="newRequestButton"
+                class="send-button"
+                id="sendRequestButton"
                 type="button"
             >
-                Send Another Request
+                Send Print Request
             </button>
 
-        </div>
-
-    </section>
+        </section>
 
 
-    <section class="how-it-works">
+        <!-- =========================================
+             CONFIRMATION
+             ========================================= -->
 
-        <h2>
-            How it works
-        </h2>
+        <section
+            class="confirmation-section"
+            id="confirmationSection"
+        >
 
-        <div class="steps">
+            <div class="confirmation-card">
 
-            <div class="step">
+                <div class="confirmation-icon">
+                    ✓
+                </div>
 
-                <span>
-                    01
-                </span>
 
-                <h3>
-                    Upload
-                </h3>
-
-                <p>
-                    Select your PDF or image.
+                <p class="eyebrow">
+                    REQUEST SENT
                 </p>
+
+
+                <h2>
+                    Your print request is on its way.
+                </h2>
+
+
+                <p class="confirmation-message">
+                    Show this order number at the shop
+                    when you arrive.
+                </p>
+
+
+                <!-- =====================================
+                     ORDER NUMBER
+                     ===================================== -->
+
+                <div class="order-number-box">
+
+                    <span>
+                        Order Number
+                    </span>
+
+
+                    <strong id="orderNumber">
+                        PF-000001
+                    </strong>
+
+                </div>
+
+
+                <!-- =====================================
+                     CONFIRMATION DETAILS
+                     ===================================== -->
+
+                <div class="confirmation-details">
+
+                    <div>
+
+                        <span>
+                            Document
+                        </span>
+
+                        <strong id="confirmationFile">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            Pages
+                        </span>
+
+                        <strong id="confirmationPages">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            Copies
+                        </span>
+
+                        <strong id="confirmationCopies">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            Paper Size
+                        </span>
+
+                        <strong id="confirmationPaperSize">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            Print Type
+                        </span>
+
+                        <strong id="confirmationPrintType">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            Print Sides
+                        </span>
+
+                        <strong id="confirmationPrintSides">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            Estimated Total
+                        </span>
+
+                        <strong id="confirmationPrice">
+                            —
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =====================================
+                     NEW REQUEST
+                     ===================================== -->
+
+                <button
+                    class="new-request-button"
+                    id="newRequestButton"
+                    type="button"
+                >
+                    Send Another Request
+                </button>
 
             </div>
 
+        </section>
 
-            <div class="step">
 
-                <span>
-                    02
-                </span>
+        <!-- =========================================
+             HOW IT WORKS
+             ========================================= -->
 
-                <h3>
-                    Choose
-                </h3>
+        <section class="how-it-works">
 
-                <p>
-                    Select your printing requirements.
-                </p>
+            <h2>
+                How it works
+            </h2>
+
+
+            <div class="steps">
+
+                <div class="step">
+
+                    <span>
+                        01
+                    </span>
+
+
+                    <h3>
+                        Upload
+                    </h3>
+
+
+                    <p>
+                        Select your PDF or image.
+                    </p>
+
+                </div>
+
+
+                <div class="step">
+
+                    <span>
+                        02
+                    </span>
+
+
+                    <h3>
+                        Choose
+                    </h3>
+
+
+                    <p>
+                        Select your printing requirements.
+                    </p>
+
+                </div>
+
+
+                <div class="step">
+
+                    <span>
+                        03
+                    </span>
+
+
+                    <h3>
+                        Send
+                    </h3>
+
+
+                    <p>
+                        Send the request to the shop.
+                    </p>
+
+                </div>
 
             </div>
 
+        </section>
 
-            <div class="step">
-
-                <span>
-                    03
-                </span>
-
-                <h3>
-                    Send
-                </h3>
-
-                <p>
-                    Send the request to the shop.
-                </p>
-
-            </div>
-
-        </div>
-
-    </section>
-
-</main>
+    </main>
 
 
-<!-- PDF.js -->
+    <!-- =========================================
+         PDF.JS
+         ========================================= -->
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script
+        type="module"
+        src="./pdfjs/pdf.min.mjs"
+    ></script>
 
-<!-- PrintFlow -->
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- =========================================
+         SUPABASE LIBRARY
+         ========================================= -->
 
-<script src="supabase-config.js"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+    ></script>
 
-<script src="app.js"></script>
+
+    <!-- =========================================
+         SUPABASE CONFIG
+         ========================================= -->
+
+    <script
+        src="supabase-config.js"
+    ></script>
+
+
+    <!-- =========================================
+         PRINTFLOW APP
+         ========================================= -->
+
+    <script
+        type="module"
+        src="app.js"
+    ></script>
 
 </body>
 
