@@ -800,7 +800,6 @@ async function saveOrderOnline(order) {
 
 
     const {
-        data,
         error
     } =
         await supabase
@@ -846,9 +845,7 @@ async function saveOrderOnline(order) {
                 status:
                     "New"
 
-            })
-            .select()
-            .single();
+            });
 
 
     if (error) {
@@ -866,12 +863,9 @@ async function saveOrderOnline(order) {
 
 
     console.log(
-        "Order saved:",
-        data
+        "Order successfully saved:",
+        order.orderNumber
     );
-
-
-    return data;
 }
 
 
