@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>PrintFlow Sales</title>
+
+    <link
+        rel="stylesheet"
+        href="styles.css"
+    >
+
+</head>
+
+
+<body>
+
+    <main class="sales-page">
+
+        <!-- =========================================
+             HEADER
+             ========================================= -->
+
+        <header class="owner-header">
+
+            <div class="owner-brand">
+
+                <div class="logo">
+                    PrintFlow
+                </div>
+
+                <p class="owner-label">
+                    Sales &amp; History
+                </p>
+
+            </div>
+
+
+            <!-- =====================================
+                 NAVIGATION
+                 ===================================== -->
+
+            <nav class="owner-nav">
+
+                <a
+                    class="owner-nav-link"
+                    href="owner.html"
+                >
+                    Dashboard
+                </a>
+
+
+                <a
+                    class="owner-nav-link active"
+                    href="sales.html"
+                >
+                    Sales &amp; History
+                </a>
+
+
+                <a
+                    class="owner-nav-link owner-customer-link"
+                    href="index.html"
+                >
+                    Customer Page
+                </a>
+
+            </nav>
+
+        </header>
+
+
+        <!-- =========================================
+             SALES CONTENT
+             ========================================= -->
+
+        <section class="sales-content">
+
+            <div class="sales-heading">
+
+                <p class="eyebrow">
+                    SHOP REPORTS
+                </p>
+
+                <h1>
+                    Sales &amp; History
+                </h1>
+
+                <p>
+                    Track completed orders and review
+                    your shop's sales.
+                </p>
+
+            </div>
+
+
+            <!-- =====================================
+                 FILTERS
+                 ===================================== -->
+
+            <section class="sales-filters">
+
+                <div class="filter-title">
+
+                    <h2>
+                        View Period
+                    </h2>
+
+                </div>
+
+
+                <div class="filter-buttons">
+
+                    <button
+                        class="sales-filter-button active"
+                        data-period="today"
+                        type="button"
+                    >
+                        Today
+                    </button>
+
+
+                    <button
+                        class="sales-filter-button"
+                        data-period="month"
+                        type="button"
+                    >
+                        This Month
+                    </button>
+
+
+                    <button
+                        class="sales-filter-button"
+                        data-period="year"
+                        type="button"
+                    >
+                        This Year
+                    </button>
+
+
+                    <button
+                        class="sales-filter-button"
+                        data-period="all"
+                        type="button"
+                    >
+                        All Time
+                    </button>
+
+                </div>
+
+
+                <!-- =================================
+                     CUSTOM DATE RANGE
+                     ================================= -->
+
+                <div class="custom-date-filter">
+
+                    <div>
+
+                        <label
+                            for="startDate"
+                        >
+                            From
+                        </label>
+
+                        <input
+                            id="startDate"
+                            type="date"
+                        >
+
+                    </div>
+
+
+                    <div>
+
+                        <label
+                            for="endDate"
+                        >
+                            To
+                        </label>
+
+                        <input
+                            id="endDate"
+                            type="date"
+                        >
+
+                    </div>
+
+
+                    <button
+                        id="applyDateFilter"
+                        type="button"
+                    >
+                        Apply Date Range
+                    </button>
+
+                </div>
+
+            </section>
+
+
+            <!-- =====================================
+                 SALES SUMMARY
+                 ===================================== -->
+
+            <section class="sales-summary-grid">
+
+                <div class="sales-summary-card">
+
+                    <span>
+                        Total Sales
+                    </span>
+
+                    <strong id="salesTotal">
+                        ₹0
+                    </strong>
+
+                </div>
+
+
+                <div class="sales-summary-card">
+
+                    <span>
+                        Completed Orders
+                    </span>
+
+                    <strong id="salesCompletedOrders">
+                        0
+                    </strong>
+
+                </div>
+
+
+                <div class="sales-summary-card">
+
+                    <span>
+                        Cancelled Orders
+                    </span>
+
+                    <strong id="salesCancelledOrders">
+                        0
+                    </strong>
+
+                </div>
+
+            </section>
+
+
+            <!-- =====================================
+                 ORDER HISTORY
+                 ===================================== -->
+
+            <section class="sales-history-section">
+
+                <div class="sales-history-heading">
+
+                    <div>
+
+                        <p class="eyebrow">
+                            ORDER HISTORY
+                        </p>
+
+                        <h2>
+                            Completed &amp; Cancelled Orders
+                        </h2>
+
+                    </div>
+
+
+                    <span
+                        id="salesHistoryCount"
+                        class="order-count"
+                    >
+                        0 orders
+                    </span>
+
+                </div>
+
+
+                <div
+                    id="salesHistoryList"
+                    class="sales-history-list"
+                >
+
+                    <!-- Sales history will appear here -->
+
+                </div>
+
+            </section>
+
+        </section>
+
+    </main>
+
+
+    <!-- =========================================
+         SALES JAVASCRIPT
+         ========================================= -->
+
+    <script src="sales.js"></script>
+
+</body>
+
+</html>
