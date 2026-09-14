@@ -72,69 +72,34 @@ const newRequestButton =
 
 
 // ============================================
-// CHECK REQUIRED ELEMENTS
+// SUPABASE CHECK
 // ============================================
 
-const requiredElements = [
-    uploadButton,
-    fileInput,
-    fileCard,
-    fileName,
-    fileInfo,
-    estimatedPrice,
-    copiesInput,
-    pageRangeInput,
-    sendRequestButton,
-    printSettings,
-    confirmationSection,
-    orderNumber,
-    confirmationFile,
-    confirmationPages,
-    confirmationCopies,
-    confirmationPrice,
-    confirmationPaperSize,
-    confirmationPrintType,
-    confirmationPrintSides,
-    newRequestButton
-];
+function getSupabaseClient() {
+
+    if (
+        !window.supabase
+    ) {
+
+        throw new Error(
+            "Supabase library is not loaded."
+        );
+
+    }
 
 
-if (
-    requiredElements.some(
-        element => !element
-    )
-) {
+    if (
+        !window.supabaseClient
+    ) {
 
-    console.error(
-        "PrintFlow: One or more required HTML elements are missing."
-    );
+        throw new Error(
+            "Supabase client is not configured."
+        );
 
-}
+    }
 
 
-// ============================================
-// CHECK SUPABASE
-// ============================================
-
-if (
-    typeof window.supabase === "undefined"
-) {
-
-    console.error(
-        "PrintFlow: Supabase library is not loaded."
-    );
-
-}
-
-
-if (
-    typeof window.supabaseClient === "undefined"
-) {
-
-    console.error(
-        "PrintFlow: Supabase client is not configured."
-    );
-
+    return window.supabaseClient;
 }
 
 
@@ -196,7 +161,7 @@ fileInput.addEventListener(
 
 
         // ========================================
-        // FILE TYPE
+        // TYPE CHECK
         // ========================================
 
         if (
@@ -218,7 +183,7 @@ fileInput.addEventListener(
 
 
         // ========================================
-        // FILE SIZE
+        // SIZE CHECK
         // ========================================
 
         if (
@@ -265,7 +230,7 @@ fileInput.addEventListener(
 
 
                 console.log(
-                    "PDF pages:",
+                    "PDF page count:",
                     totalPages
                 );
 
@@ -294,15 +259,14 @@ fileInput.addEventListener(
 
         else {
 
-            // Images count as one printable page.
-
-            totalPages = 1;
+            totalPages =
+                1;
 
         }
 
 
         // ========================================
-        // FILE DISPLAY
+        // DISPLAY FILE
         // ========================================
 
         fileName.textContent =
@@ -364,17 +328,9 @@ fileInput.addEventListener(
         );
 
 
-        // ========================================
-        // RESET PAGE RANGE
-        // ========================================
-
         pageRangeInput.value =
             "All";
 
-
-        // ========================================
-        // CALCULATE PRICE
-        // ========================================
 
         calculatePrice();
 
@@ -383,7 +339,7 @@ fileInput.addEventListener(
 
 
 // ============================================
-// RESET SELECTED FILE
+// RESET FILE
 // ============================================
 
 function resetSelectedFile() {
@@ -488,7 +444,8 @@ function getCopies() {
         copies < 1
     ) {
 
-        copies = 1;
+        copies =
+            1;
 
     }
 
@@ -497,7 +454,8 @@ function getCopies() {
         copies > 100
     ) {
 
-        copies = 100;
+        copies =
+            100;
 
     }
 
@@ -525,7 +483,7 @@ function getSelectedPageCount() {
 
 
     // ========================================
-    // ALL
+    // ALL PAGES
     // ========================================
 
     if (
@@ -574,7 +532,9 @@ function getSelectedPageCount() {
         );
 
 
-    if (rangeMatch) {
+    if (
+        rangeMatch
+    ) {
 
         const start =
             Number(
@@ -609,7 +569,6 @@ function getSelectedPageCount() {
 
     // ========================================
     // INDIVIDUAL PAGES
-    // Example: 1,3,5
     // ========================================
 
     const pages =
@@ -664,7 +623,7 @@ function getSelectedPageCount() {
 
 
 // ============================================
-// CALCULATE PRICE
+// PRICE CALCULATION
 // ============================================
 
 function calculatePrice() {
@@ -700,10 +659,6 @@ function calculatePrice() {
         2;
 
 
-    // ========================================
-    // A4 B&W
-    // ========================================
-
     if (
         paperSize === "A4" &&
         printType === "B&W"
@@ -713,11 +668,6 @@ function calculatePrice() {
             2;
 
     }
-
-
-    // ========================================
-    // A4 COLOR
-    // ========================================
 
     else if (
         paperSize === "A4" &&
@@ -729,11 +679,6 @@ function calculatePrice() {
 
     }
 
-
-    // ========================================
-    // A3 B&W
-    // ========================================
-
     else if (
         paperSize === "A3" &&
         printType === "B&W"
@@ -743,11 +688,6 @@ function calculatePrice() {
             4;
 
     }
-
-
-    // ========================================
-    // A3 COLOR
-    // ========================================
 
     else if (
         paperSize === "A3" &&
@@ -783,7 +723,7 @@ function generateOrderNumber() {
             .slice(-7);
 
 
-    const random =
+    const randomNumber =
         Math.floor(
             100 +
             Math.random() * 900
@@ -793,89 +733,98 @@ function generateOrderNumber() {
     return (
         "PF-" +
         timestamp +
-        random
+        randomNumber
     );
 }
 
 
 // ============================================
-// SEND ORDER TO SUPABASE
+// SAVE ORDER TO SUPABASE
 // ============================================
 
 async function saveOrderOnline(order) {
 
+    const supabase =
+        getSupabaseClient();
+
+
+    const orderData = {
+
+        order_number:
+            order.orderNumber,
+
+        document_name:
+            order.documentName,
+
+        file_type:
+            order.fileType,
+
+        file_size:
+            order.fileSize,
+
+        total_pages:
+            order.totalPages,
+
+        selected_pages:
+            order.selectedPages,
+
+        page_range:
+            order.pageRange,
+
+        copies:
+            order.copies,
+
+        paper_size:
+            order.paperSize,
+
+        print_type:
+            order.printType,
+
+        print_sides:
+            order.printSides,
+
+        estimated_price:
+            order.estimatedPrice,
+
+        status:
+            "New"
+
+    };
+
+
+    console.log(
+        "Sending order to Supabase:",
+        orderData
+    );
+
+
+    const response =
+        await supabase
+            .from("orders")
+            .insert(
+                orderData
+            );
+
+
     if (
-        typeof window.supabaseClient ===
-        "undefined"
+        response.error
     ) {
 
-        throw new Error(
-            "Supabase client is not configured."
-        );
-
-    }
-
-
-    const { error } =
-        await window.supabaseClient
-            .from("orders")
-            .insert({
-
-                order_number:
-                    order.orderNumber,
-
-                document_name:
-                    order.documentName,
-
-                file_type:
-                    order.fileType,
-
-                file_size:
-                    order.fileSize,
-
-                total_pages:
-                    order.totalPages,
-
-                selected_pages:
-                    order.selectedPages,
-
-                page_range:
-                    order.pageRange,
-
-                copies:
-                    order.copies,
-
-                paper_size:
-                    order.paperSize,
-
-                print_type:
-                    order.printType,
-
-                print_sides:
-                    order.printSides,
-
-                estimated_price:
-                    order.estimatedPrice,
-
-                status:
-                    "New"
-            });
-
-
-    if (error) {
-
         console.error(
-            "Supabase order insertion failed:",
-            error
+            "Supabase rejected order:",
+            response.error
         );
 
 
-        throw error;
+        throw new Error(
+            response.error.message ||
+            "Supabase rejected the order."
+        );
     }
 
 
     console.log(
-        "PrintFlow order saved online:",
+        "Order successfully saved in Supabase:",
         order.orderNumber
     );
 
@@ -909,7 +858,7 @@ sendRequestButton.addEventListener(
 
 
         // ========================================
-        // CHECK PAGE SELECTION
+        // CHECK PAGE RANGE
         // ========================================
 
         const selectedPages =
@@ -926,6 +875,33 @@ sendRequestButton.addEventListener(
 
 
             pageRangeInput.focus();
+
+
+            return;
+        }
+
+
+        // ========================================
+        // CHECK SUPABASE
+        // ========================================
+
+        try {
+
+            getSupabaseClient();
+
+        }
+
+        catch (error) {
+
+            console.error(
+                error
+            );
+
+
+            alert(
+                "PrintFlow could not connect to the online service.\n\n" +
+                "Please check your Supabase configuration."
+            );
 
 
             return;
@@ -962,7 +938,8 @@ sendRequestButton.addEventListener(
 
 
         if (
-            priceText === "Invalid"
+            priceText ===
+            "Invalid"
         ) {
 
             alert(
@@ -977,27 +954,22 @@ sendRequestButton.addEventListener(
         const numericPrice =
             Number(
                 priceText
-                    .replace("₹", "")
+                    .replace(
+                        "₹",
+                        ""
+                    )
                     .trim()
             );
 
 
         // ========================================
-        // CREATE ORDER NUMBER
-        // ========================================
-
-        const newOrderNumber =
-            generateOrderNumber();
-
-
-        // ========================================
-        // CREATE ORDER OBJECT
+        // CREATE ORDER
         // ========================================
 
         const order = {
 
             orderNumber:
-                newOrderNumber,
+                generateOrderNumber(),
 
             documentName:
                 file.name,
@@ -1037,11 +1009,12 @@ sendRequestButton.addEventListener(
 
             createdAt:
                 new Date().toISOString()
+
         };
 
 
         // ========================================
-        // DISABLE BUTTON
+        // BUTTON LOADING STATE
         // ========================================
 
         sendRequestButton.disabled =
@@ -1064,7 +1037,7 @@ sendRequestButton.addEventListener(
 
 
             // ====================================
-            // SHOW CONFIRMATION
+            // CUSTOMER CONFIRMATION
             // ====================================
 
             orderNumber.textContent =
@@ -1100,12 +1073,16 @@ sendRequestButton.addEventListener(
 
 
             // ====================================
-            // SWITCH SCREEN
+            // HIDE SETTINGS
             // ====================================
 
             printSettings.style.display =
                 "none";
 
+
+            // ====================================
+            // SHOW CONFIRMATION
+            // ====================================
 
             confirmationSection.classList.add(
                 "show"
@@ -1123,16 +1100,18 @@ sendRequestButton.addEventListener(
         catch (error) {
 
             console.error(
-                "PrintFlow submission error:",
+                "PrintFlow order submission failed:",
                 error
             );
 
 
             alert(
                 "We couldn't send your print request.\n\n" +
-                "Please try again."
+                (
+                    error.message ||
+                    "Please try again."
+                )
             );
-
 
         }
 
@@ -1152,7 +1131,7 @@ sendRequestButton.addEventListener(
 
 
 // ============================================
-// NEW REQUEST
+// SEND ANOTHER REQUEST
 // ============================================
 
 newRequestButton.addEventListener(
@@ -1192,7 +1171,15 @@ newRequestButton.addEventListener(
 
 
         // ========================================
-        // RESET PAPER SIZE
+        // RESET PAGE RANGE
+        // ========================================
+
+        pageRangeInput.value =
+            "All";
+
+
+        // ========================================
+        // RESET PAPER
         // ========================================
 
         const defaultPaperSize =
@@ -1250,10 +1237,6 @@ newRequestButton.addEventListener(
 
         }
 
-
-        // ========================================
-        // RESET PRICE
-        // ========================================
 
         calculatePrice();
 
