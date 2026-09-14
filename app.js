@@ -2,9 +2,6 @@
 // PRINTFLOW CUSTOMER APP
 // ============================================
 
-// PDF.js is stored locally in the project.
-import * as pdfjsLib from "./pdfjs/pdf.min.mjs";
-
 
 // ============================================
 // HTML ELEMENTS
@@ -72,20 +69,46 @@ const newRequestButton =
 
 
 // ============================================
-// SUPABASE CHECK
+// PDF.JS CHECK
+// ============================================
+
+if (
+    typeof window.pdfjsLib === "undefined"
+) {
+
+    console.error(
+        "PDF.js was not loaded."
+    );
+
+    alert(
+        "PrintFlow PDF service could not load.\n\n" +
+        "Please refresh the page and try again."
+    );
+}
+
+
+// ============================================
+// PDF.JS WORKER
+// ============================================
+
+if (
+    typeof window.pdfjsLib !== "undefined"
+) {
+
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+}
+
+
+// ============================================
+// SUPABASE
 // ============================================
 
 function getSupabaseClient() {
 
-    if (!window.supabase) {
-
-        throw new Error(
-            "Supabase library is not loaded."
-        );
-    }
-
-
-    if (!window.supabaseClient) {
+    if (
+        !window.supabaseClient
+    ) {
 
         throw new Error(
             "Supabase client is not configured."
@@ -101,7 +124,8 @@ function getSupabaseClient() {
 // BASIC VARIABLES
 // ============================================
 
-let totalPages = 1;
+let totalPages =
+    1;
 
 
 const allowedTypes = [
@@ -113,30 +137,6 @@ const allowedTypes = [
 
 const maxFileSize =
     25 * 1024 * 1024;
-
-
-// ============================================
-// PDF.JS
-// ============================================
-
-// We intentionally do not use the PDF worker here.
-// This avoids GitHub Pages worker/path problems.
-
-pdfjsLib.GlobalWorkerOptions.workerSrc = "";
-
-
-// ============================================
-// UPLOAD BUTTON
-// ============================================
-
-uploadButton.addEventListener(
-    "click",
-    function () {
-
-        fileInput.click();
-
-    }
-);
 
 
 // ============================================
@@ -169,7 +169,21 @@ function resetSelectedFile() {
 
 
 // ============================================
-// FILE SELECTED
+// UPLOAD BUTTON
+// ============================================
+
+uploadButton.addEventListener(
+    "click",
+    function () {
+
+        fileInput.click();
+
+    }
+);
+
+
+// ============================================
+// FILE SELECTION
 // ============================================
 
 fileInput.addEventListener(
@@ -185,30 +199,42 @@ fileInput.addEventListener(
         }
 
 
+        console.log(
+            "Selected file:",
+            file.name,
+            file.type,
+            file.size
+        );
+
+
         // ====================================
-        // CHECK FILE TYPE
+        // FILE TYPE
         // ====================================
 
-        const lowerName =
+        const fileNameLower =
             file.name.toLowerCase();
 
 
-        const supportedByName =
-            lowerName.endsWith(".pdf") ||
-            lowerName.endsWith(".jpg") ||
-            lowerName.endsWith(".jpeg") ||
-            lowerName.endsWith(".png");
+        const isPDF =
+            file.type === "application/pdf" ||
+            fileNameLower.endsWith(".pdf");
 
 
-        const supportedByType =
-            allowedTypes.includes(
-                file.type
-            );
+        const isJPG =
+            file.type === "image/jpeg" ||
+            fileNameLower.endsWith(".jpg") ||
+            fileNameLower.endsWith(".jpeg");
+
+
+        const isPNG =
+            file.type === "image/png" ||
+            fileNameLower.endsWith(".png");
 
 
         if (
-            !supportedByType &&
-            !supportedByName
+            !isPDF &&
+            !isJPG &&
+            !isPNG
         ) {
 
             alert(
@@ -224,7 +250,7 @@ fileInput.addEventListener(
 
 
         // ====================================
-        // CHECK FILE SIZE
+        // FILE SIZE
         // ====================================
 
         if (
@@ -244,21 +270,26 @@ fileInput.addEventListener(
 
 
         // ====================================
-        // COUNT PDF PAGES
+        // PDF PAGE COUNT
         // ====================================
 
-        const isPdf =
-            file.type === "application/pdf" ||
-            lowerName.endsWith(".pdf");
-
-
-        if (isPdf) {
+        if (isPDF) {
 
             try {
 
+                if (
+                    typeof window.pdfjsLib ===
+                    "undefined"
+                ) {
+
+                    throw new Error(
+                        "PDF.js is unavailable."
+                    );
+                }
+
+
                 console.log(
-                    "Starting PDF read:",
-                    file.name
+                    "Reading PDF..."
                 );
 
 
@@ -266,17 +297,21 @@ fileInput.addEventListener(
                     await file.arrayBuffer();
 
 
+                const pdfData =
+                    new Uint8Array(
+                        arrayBuffer
+                    );
+
+
                 console.log(
-                    "PDF loaded into memory."
+                    "PDF bytes:",
+                    pdfData.length
                 );
 
 
                 const loadingTask =
-                    pdfjsLib.getDocument({
-                        data: new Uint8Array(
-                            arrayBuffer
-                        ),
-                        disableWorker: true
+                    window.pdfjsLib.getDocument({
+                        data: pdfData
                     });
 
 
@@ -285,11 +320,13 @@ fileInput.addEventListener(
 
 
                 totalPages =
-                    pdf.numPages;
+                    Number(
+                        pdf.numPages
+                    );
 
 
                 console.log(
-                    "PDF page count:",
+                    "PDF pages:",
                     totalPages
                 );
 
@@ -302,23 +339,36 @@ fileInput.addEventListener(
                 ) {
 
                     throw new Error(
-                        "PDF has no readable pages."
+                        "The PDF has no readable pages."
                     );
                 }
+
 
             }
 
             catch (error) {
 
                 console.error(
-                    "PDF page counting failed:",
+                    "PDF READ ERROR:",
                     error
                 );
 
 
+                console.error(
+                    "PDF error name:",
+                    error?.name
+                );
+
+
+                console.error(
+                    "PDF error message:",
+                    error?.message
+                );
+
+
                 alert(
-                    "We couldn't read this PDF.\n\n" +
-                    "Please try another PDF file."
+                    "This PDF could not be read.\n\n" +
+                    "Please try another PDF."
                 );
 
 
@@ -337,47 +387,30 @@ fileInput.addEventListener(
 
 
         // ====================================
-        // FILE TYPE DISPLAY
+        // FILE DISPLAY
         // ====================================
 
-        let fileType =
+        let displayType =
             "File";
 
 
-        if (isPdf) {
+        if (isPDF) {
 
-            fileType =
+            displayType =
                 "PDF";
-
         }
 
-        else if (
-            lowerName.endsWith(".jpg") ||
-            lowerName.endsWith(".jpeg") ||
-            file.type === "image/jpeg"
-        ) {
+        else if (isJPG) {
 
-            fileType =
+            displayType =
                 "JPG";
-
         }
 
-        else if (
-            lowerName.endsWith(".png") ||
-            file.type === "image/png"
-        ) {
+        else if (isPNG) {
 
-            fileType =
+            displayType =
                 "PNG";
         }
-
-
-        // ====================================
-        // FILE INFORMATION
-        // ====================================
-
-        fileName.textContent =
-            file.name;
 
 
         const sizeInMB =
@@ -387,8 +420,12 @@ fileInput.addEventListener(
             ).toFixed(2);
 
 
+        fileName.textContent =
+            file.name;
+
+
         fileInfo.textContent =
-            `${fileType} • ${sizeInMB} MB • ${totalPages} ${
+            `${displayType} • ${sizeInMB} MB • ${totalPages} ${
                 totalPages === 1
                     ? "page"
                     : "pages"
@@ -406,12 +443,17 @@ fileInput.addEventListener(
 
         calculatePrice();
 
+
+        console.log(
+            "File successfully accepted."
+        );
+
     }
 );
 
 
 // ============================================
-// GET PAPER SIZE
+// PAPER SIZE
 // ============================================
 
 function getPaperSize() {
@@ -429,7 +471,7 @@ function getPaperSize() {
 
 
 // ============================================
-// GET PRINT TYPE
+// PRINT TYPE
 // ============================================
 
 function getPrintType() {
@@ -447,7 +489,7 @@ function getPrintType() {
 
 
 // ============================================
-// GET PRINT SIDES
+// PRINT SIDES
 // ============================================
 
 function getPrintSides() {
@@ -465,7 +507,7 @@ function getPrintSides() {
 
 
 // ============================================
-// GET COPIES
+// COPIES
 // ============================================
 
 function getCopies() {
@@ -496,7 +538,9 @@ function getCopies() {
 
 
     copies =
-        Math.floor(copies);
+        Math.floor(
+            copies
+        );
 
 
     copiesInput.value =
@@ -508,7 +552,7 @@ function getCopies() {
 
 
 // ============================================
-// GET SELECTED PAGE COUNT
+// SELECTED PAGE COUNT
 // ============================================
 
 function getSelectedPageCount() {
@@ -516,10 +560,6 @@ function getSelectedPageCount() {
     const value =
         pageRangeInput.value.trim();
 
-
-    // ========================================
-    // ALL
-    // ========================================
 
     if (
         value === "" ||
@@ -529,10 +569,6 @@ function getSelectedPageCount() {
         return totalPages;
     }
 
-
-    // ========================================
-    // SINGLE PAGE
-    // ========================================
 
     if (
         /^\d+$/.test(value)
@@ -554,10 +590,6 @@ function getSelectedPageCount() {
         return 0;
     }
 
-
-    // ========================================
-    // RANGE
-    // ========================================
 
     const rangeMatch =
         value.match(
@@ -596,10 +628,6 @@ function getSelectedPageCount() {
         return 0;
     }
 
-
-    // ========================================
-    // INDIVIDUAL PAGES
-    // ========================================
 
     const pages =
         value
@@ -650,7 +678,7 @@ function getSelectedPageCount() {
 
 
 // ============================================
-// PRICE CALCULATION
+// PRICE
 // ============================================
 
 function calculatePrice() {
@@ -735,18 +763,18 @@ function calculatePrice() {
 
 
 // ============================================
-// GENERATE ORDER NUMBER
+// ORDER NUMBER
 // ============================================
 
 function generateOrderNumber() {
 
-    const timestampPart =
+    const timestamp =
         Date.now()
             .toString()
             .slice(-6);
 
 
-    const randomPart =
+    const random =
         Math.floor(
             100 +
             Math.random() * 900
@@ -755,14 +783,14 @@ function generateOrderNumber() {
 
     return (
         "PF-" +
-        timestampPart +
-        randomPart
+        timestamp +
+        random
     );
 }
 
 
 // ============================================
-// SAVE ORDER TO SUPABASE
+// SAVE ORDER ONLINE
 // ============================================
 
 async function saveOrderOnline(order) {
@@ -771,64 +799,54 @@ async function saveOrderOnline(order) {
         getSupabaseClient();
 
 
-    const orderData = {
-
-        order_number:
-            order.orderNumber,
-
-        document_name:
-            order.documentName,
-
-        file_type:
-            order.fileType,
-
-        file_size:
-            order.fileSize,
-
-        total_pages:
-            order.totalPages,
-
-        selected_pages:
-            order.selectedPages,
-
-        page_range:
-            order.pageRange,
-
-        copies:
-            order.copies,
-
-        paper_size:
-            order.paperSize,
-
-        print_type:
-            order.printType,
-
-        print_sides:
-            order.printSides,
-
-        estimated_price:
-            order.estimatedPrice,
-
-        status:
-            "New"
-    };
-
-
-    console.log(
-        "Sending order to Supabase:",
-        orderData
-    );
-
-
     const {
         data,
         error
     } =
         await supabase
             .from("orders")
-            .insert(
-                orderData
-            )
+            .insert({
+
+                order_number:
+                    order.orderNumber,
+
+                document_name:
+                    order.documentName,
+
+                file_type:
+                    order.fileType,
+
+                file_size:
+                    order.fileSize,
+
+                total_pages:
+                    order.totalPages,
+
+                selected_pages:
+                    order.selectedPages,
+
+                page_range:
+                    order.pageRange,
+
+                copies:
+                    order.copies,
+
+                paper_size:
+                    order.paperSize,
+
+                print_type:
+                    order.printType,
+
+                print_sides:
+                    order.printSides,
+
+                estimated_price:
+                    order.estimatedPrice,
+
+                status:
+                    "New"
+
+            })
             .select()
             .single();
 
@@ -836,20 +854,19 @@ async function saveOrderOnline(order) {
     if (error) {
 
         console.error(
-            "Supabase order error:",
+            "Supabase error:",
             error
         );
 
 
         throw new Error(
-            error.message ||
-            "Supabase rejected the order."
+            error.message
         );
     }
 
 
     console.log(
-        "Online order created:",
+        "Order saved:",
         data
     );
 
@@ -870,10 +887,6 @@ sendRequestButton.addEventListener(
             fileInput.files[0];
 
 
-        // ====================================
-        // CHECK FILE
-        // ====================================
-
         if (!file) {
 
             alert(
@@ -883,10 +896,6 @@ sendRequestButton.addEventListener(
             return;
         }
 
-
-        // ====================================
-        // CHECK PAGE RANGE
-        // ====================================
 
         const selectedPages =
             getSelectedPageCount();
@@ -907,10 +916,6 @@ sendRequestButton.addEventListener(
         }
 
 
-        // ====================================
-        // CHECK SUPABASE
-        // ====================================
-
         try {
 
             getSupabaseClient();
@@ -920,13 +925,11 @@ sendRequestButton.addEventListener(
         catch (error) {
 
             console.error(
-                "Supabase check failed:",
                 error
             );
 
 
             alert(
-                "PrintFlow could not connect to the online service.\n\n" +
                 error.message
             );
 
@@ -934,10 +937,6 @@ sendRequestButton.addEventListener(
             return;
         }
 
-
-        // ====================================
-        // GET SETTINGS
-        // ====================================
 
         const paperSize =
             getPaperSize();
@@ -970,7 +969,7 @@ sendRequestButton.addEventListener(
         ) {
 
             alert(
-                "Please correct the print settings before sending."
+                "Please correct the print settings."
             );
 
 
@@ -988,10 +987,6 @@ sendRequestButton.addEventListener(
                     .trim()
             );
 
-
-        // ====================================
-        // CREATE ORDER
-        // ====================================
 
         const order = {
 
@@ -1033,16 +1028,10 @@ sendRequestButton.addEventListener(
                 numericPrice,
 
             status:
-                "New",
+                "New"
 
-            createdAt:
-                new Date().toISOString()
         };
 
-
-        // ====================================
-        // LOADING STATE
-        // ====================================
 
         sendRequestButton.disabled =
             true;
@@ -1058,10 +1047,6 @@ sendRequestButton.addEventListener(
                 order
             );
 
-
-            // ==================================
-            // SHOW CONFIRMATION
-            // ==================================
 
             orderNumber.textContent =
                 order.orderNumber;
@@ -1110,11 +1095,6 @@ sendRequestButton.addEventListener(
             });
 
 
-            console.log(
-                "PrintFlow online order:",
-                order
-            );
-
         }
 
         catch (error) {
@@ -1127,10 +1107,7 @@ sendRequestButton.addEventListener(
 
             alert(
                 "We couldn't send your print request.\n\n" +
-                (
-                    error.message ||
-                    "Please try again."
-                )
+                error.message
             );
 
         }
@@ -1143,7 +1120,6 @@ sendRequestButton.addEventListener(
 
             sendRequestButton.textContent =
                 "Send Print Request";
-
         }
 
     }
@@ -1151,7 +1127,7 @@ sendRequestButton.addEventListener(
 
 
 // ============================================
-// SEND ANOTHER REQUEST
+// NEW REQUEST
 // ============================================
 
 newRequestButton.addEventListener(
@@ -1178,53 +1154,41 @@ newRequestButton.addEventListener(
             "All";
 
 
-        // ====================================
-        // RESET PAPER SIZE
-        // ====================================
-
-        const defaultPaperSize =
+        const paper =
             document.querySelector(
                 'input[name="paperSize"][value="A4"]'
             );
 
 
-        if (defaultPaperSize) {
+        if (paper) {
 
-            defaultPaperSize.checked =
+            paper.checked =
                 true;
         }
 
 
-        // ====================================
-        // RESET PRINT TYPE
-        // ====================================
-
-        const defaultPrintType =
+        const type =
             document.querySelector(
                 'input[name="printType"][value="B&W"]'
             );
 
 
-        if (defaultPrintType) {
+        if (type) {
 
-            defaultPrintType.checked =
+            type.checked =
                 true;
         }
 
 
-        // ====================================
-        // RESET PRINT SIDES
-        // ====================================
-
-        const defaultPrintSides =
+        const sides =
             document.querySelector(
                 'input[name="printSides"][value="Single"]'
             );
 
 
-        if (defaultPrintSides) {
+        if (sides) {
 
-            defaultPrintSides.checked =
+            sides.checked =
                 true;
         }
 
@@ -1242,7 +1206,7 @@ newRequestButton.addEventListener(
 
 
 // ============================================
-// PAPER SIZE EVENTS
+// SETTINGS EVENTS
 // ============================================
 
 document
@@ -1250,70 +1214,45 @@ document
         'input[name="paperSize"]'
     )
     .forEach(
-        function (input) {
-
+        input =>
             input.addEventListener(
                 "change",
                 calculatePrice
-            );
-
-        }
+            )
     );
 
-
-// ============================================
-// PRINT TYPE EVENTS
-// ============================================
 
 document
     .querySelectorAll(
         'input[name="printType"]'
     )
     .forEach(
-        function (input) {
-
+        input =>
             input.addEventListener(
                 "change",
                 calculatePrice
-            );
-
-        }
+            )
     );
 
-
-// ============================================
-// PRINT SIDES EVENTS
-// ============================================
 
 document
     .querySelectorAll(
         'input[name="printSides"]'
     )
     .forEach(
-        function (input) {
-
+        input =>
             input.addEventListener(
                 "change",
                 calculatePrice
-            );
-
-        }
+            )
     );
 
-
-// ============================================
-// COPIES EVENT
-// ============================================
 
 copiesInput.addEventListener(
     "input",
     calculatePrice
 );
 
-
-// ============================================
-// PAGE RANGE EVENT
-// ============================================
 
 pageRangeInput.addEventListener(
     "input",
