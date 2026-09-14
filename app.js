@@ -59,6 +59,28 @@ const newRequestButton =
     document.getElementById("newRequestButton");
 
 
+// ============================================
+// SUPABASE CHECK
+// ============================================
+
+if (
+    typeof supabaseClient === "undefined"
+) {
+
+    console.error(
+        "Supabase is not configured correctly."
+    );
+
+    alert(
+        "PrintFlow could not connect to the online service."
+    );
+}
+
+
+// ============================================
+// BASIC VARIABLES
+// ============================================
+
 let totalPages = 1;
 
 
@@ -71,17 +93,6 @@ const allowedTypes = [
 
 const maxFileSize =
     25 * 1024 * 1024;
-
-
-// ============================================
-// STORAGE KEYS
-// ============================================
-
-const lastOrderNumberKey =
-    "printFlowLastOrderNumber";
-
-const ordersStorageKey =
-    "printFlowOrders";
 
 
 // ============================================
@@ -173,7 +184,10 @@ fileInput.addEventListener(
         // COUNT PDF PAGES
         // ====================================
 
-        if (file.type === "application/pdf") {
+        if (
+            file.type ===
+            "application/pdf"
+        ) {
 
             try {
 
@@ -228,8 +242,6 @@ fileInput.addEventListener(
         }
 
         else {
-
-            // JPG / PNG = 1 page
 
             totalPages = 1;
 
@@ -296,10 +308,6 @@ fileInput.addEventListener(
 
         fileCard.classList.add("show");
 
-
-        // ====================================
-        // CALCULATE PRICE
-        // ====================================
 
         calculatePrice();
 
@@ -383,7 +391,9 @@ function getCopies() {
     }
 
 
-    if (copies > 100) {
+    if (
+        copies > 100
+    ) {
 
         copies = 100;
 
@@ -413,7 +423,7 @@ function getSelectedPageCount() {
 
 
     // ========================================
-    // ALL PAGES
+    // ALL
     // ========================================
 
     if (
@@ -428,7 +438,6 @@ function getSelectedPageCount() {
 
     // ========================================
     // SINGLE PAGE
-    // Example: 3
     // ========================================
 
     if (
@@ -455,7 +464,6 @@ function getSelectedPageCount() {
 
     // ========================================
     // PAGE RANGE
-    // Example: 1-5
     // ========================================
 
     const rangeMatch =
@@ -494,17 +502,18 @@ function getSelectedPageCount() {
 
     // ========================================
     // INDIVIDUAL PAGES
-    // Example: 1,3,5
     // ========================================
 
     const pages =
         value
             .split(",")
             .map(
-                page => page.trim()
+                page =>
+                    page.trim()
             )
             .filter(
-                page => /^\d+$/.test(page)
+                page =>
+                    /^\d+$/.test(page)
             );
 
 
@@ -514,7 +523,8 @@ function getSelectedPageCount() {
 
         const pageNumbers =
             pages.map(
-                page => Number(page)
+                page =>
+                    Number(page)
             );
 
 
@@ -578,10 +588,6 @@ function calculatePrice() {
         2;
 
 
-    // ========================================
-    // A4 B&W
-    // ========================================
-
     if (
         paperSize === "A4" &&
         printType === "B&W"
@@ -591,11 +597,6 @@ function calculatePrice() {
             2;
 
     }
-
-
-    // ========================================
-    // A4 COLOR
-    // ========================================
 
     else if (
         paperSize === "A4" &&
@@ -607,11 +608,6 @@ function calculatePrice() {
 
     }
 
-
-    // ========================================
-    // A3 B&W
-    // ========================================
-
     else if (
         paperSize === "A3" &&
         printType === "B&W"
@@ -621,11 +617,6 @@ function calculatePrice() {
             4;
 
     }
-
-
-    // ========================================
-    // A3 COLOR
-    // ========================================
 
     else if (
         paperSize === "A3" &&
@@ -655,126 +646,110 @@ function calculatePrice() {
 
 function generateOrderNumber() {
 
-    let lastOrderNumber =
-        Number(
-            localStorage.getItem(
-                lastOrderNumberKey
-            )
+    const timestampPart =
+        Date.now()
+            .toString()
+            .slice(-6);
+
+
+    const randomPart =
+        Math.floor(
+            100 +
+            Math.random() * 900
         );
-
-
-    if (
-        !Number.isFinite(lastOrderNumber)
-    ) {
-
-        lastOrderNumber = 0;
-
-    }
-
-
-    lastOrderNumber += 1;
-
-
-    localStorage.setItem(
-        lastOrderNumberKey,
-        lastOrderNumber
-    );
 
 
     return (
         "PF-" +
-        String(lastOrderNumber)
-            .padStart(6, "0")
+        timestampPart +
+        randomPart
     );
 }
 
 
 // ============================================
-// GET SAVED ORDERS
+// SAVE ORDER ONLINE
 // ============================================
 
-function getSavedOrders() {
+async function saveOrderOnline(order) {
 
-    try {
+    if (
+        typeof supabaseClient ===
+        "undefined"
+    ) {
 
-        const savedOrders =
-            localStorage.getItem(
-                ordersStorageKey
-            );
-
-
-        if (!savedOrders) {
-            return [];
-        }
-
-
-        const orders =
-            JSON.parse(savedOrders);
-
-
-        if (!Array.isArray(orders)) {
-            return [];
-        }
-
-
-        return orders;
-
+        throw new Error(
+            "Supabase client is not available."
+        );
     }
 
-    catch (error) {
+
+    const { data, error } =
+        await supabaseClient
+            .from("orders")
+            .insert({
+                order_number:
+                    order.orderNumber,
+
+                document_name:
+                    order.documentName,
+
+                file_type:
+                    order.fileType,
+
+                file_size:
+                    order.fileSize,
+
+                total_pages:
+                    order.totalPages,
+
+                selected_pages:
+                    order.selectedPages,
+
+                page_range:
+                    order.pageRange,
+
+                copies:
+                    order.copies,
+
+                paper_size:
+                    order.paperSize,
+
+                print_type:
+                    order.printType,
+
+                print_sides:
+                    order.printSides,
+
+                estimated_price:
+                    order.estimatedPrice,
+
+                status:
+                    order.status
+            })
+            .select()
+            .single();
+
+
+    if (error) {
 
         console.error(
-            "Could not read saved orders:",
+            "Supabase order error:",
             error
         );
 
 
-        return [];
-    }
-}
-
-
-// ============================================
-// SAVE ORDER
-// ============================================
-
-function saveOrder(order) {
-
-    const orders =
-        getSavedOrders();
-
-
-    orders.push(order);
-
-
-    try {
-
-        localStorage.setItem(
-            ordersStorageKey,
-            JSON.stringify(orders)
-        );
-
-
-        console.log(
-            "Order saved:",
-            order
-        );
-
-
+        throw error;
     }
 
-    catch (error) {
 
-        console.error(
-            "Could not save order:",
-            error
-        );
+    console.log(
+        "Online order created:",
+        data
+    );
 
 
-        alert(
-            "The order could not be saved in this browser."
-        );
-    }
+    return data;
 }
 
 
@@ -784,7 +759,7 @@ function saveOrder(order) {
 
 sendRequestButton.addEventListener(
     "click",
-    function () {
+    async function () {
 
         const file =
             fileInput.files[0];
@@ -827,7 +802,7 @@ sendRequestButton.addEventListener(
 
 
         // ====================================
-        // GET ALL SETTINGS
+        // GET SETTINGS
         // ====================================
 
         const paperSize =
@@ -851,8 +826,28 @@ sendRequestButton.addEventListener(
             "All";
 
 
-        const price =
+        const priceText =
             estimatedPrice.textContent;
+
+
+        if (
+            priceText === "Invalid"
+        ) {
+
+            alert(
+                "Please correct the print settings before sending."
+            );
+
+            return;
+        }
+
+
+        const numericPrice =
+            Number(
+                priceText
+                    .replace("₹", "")
+                    .trim()
+            );
 
 
         // ====================================
@@ -864,15 +859,7 @@ sendRequestButton.addEventListener(
 
 
         // ====================================
-        // CREATE ORDER DATE/TIME
-        // ====================================
-
-        const createdAt =
-            new Date().toISOString();
-
-
-        // ====================================
-        // CREATE ORDER OBJECT
+        // CREATE ORDER
         // ====================================
 
         const order = {
@@ -911,94 +898,118 @@ sendRequestButton.addEventListener(
                 printSides,
 
             estimatedPrice:
-                price,
+                numericPrice,
 
             status:
                 "New",
 
             createdAt:
-                createdAt
+                new Date().toISOString()
         };
 
 
         // ====================================
-        // SAVE ORDER
+        // SEND TO SUPABASE
         // ====================================
 
-        saveOrder(order);
+        sendRequestButton.disabled =
+            true;
 
 
-        // ====================================
-        // SHOW CONFIRMATION NUMBER
-        // ====================================
-
-        orderNumber.textContent =
-            newOrderNumber;
+        sendRequestButton.textContent =
+            "Sending...";
 
 
-        // ====================================
-        // SHOW CONFIRMATION DETAILS
-        // ====================================
+        try {
 
-        confirmationFile.textContent =
-            file.name;
-
-
-        confirmationPages.textContent =
-            selectedPages;
+            await saveOrderOnline(
+                order
+            );
 
 
-        confirmationCopies.textContent =
-            copies;
+            // ==================================
+            // SHOW CONFIRMATION
+            // ==================================
+
+            orderNumber.textContent =
+                newOrderNumber;
 
 
-        confirmationPrice.textContent =
-            price;
+            confirmationFile.textContent =
+                file.name;
 
 
-        confirmationPaperSize.textContent =
-            paperSize;
+            confirmationPages.textContent =
+                selectedPages;
 
 
-        confirmationPrintType.textContent =
-            printType;
+            confirmationCopies.textContent =
+                copies;
 
 
-        confirmationPrintSides.textContent =
-            printSides;
+            confirmationPrice.textContent =
+                priceText;
 
 
-        // ====================================
-        // SWITCH TO CONFIRMATION
-        // ====================================
-
-        printSettings.style.display =
-            "none";
+            confirmationPaperSize.textContent =
+                paperSize;
 
 
-        confirmationSection.classList.add(
-            "show"
-        );
+            confirmationPrintType.textContent =
+                printType;
 
 
-        // ====================================
-        // SCROLL TO CONFIRMATION
-        // ====================================
-
-        confirmationSection.scrollIntoView({
-            behavior: "smooth",
-            block: "start"
-        });
+            confirmationPrintSides.textContent =
+                printSides;
 
 
-        // ====================================
-        // DEBUG
-        // ====================================
+            printSettings.style.display =
+                "none";
 
-        console.log(
-            "PrintFlow order created:",
-            order
-        );
+
+            confirmationSection.classList.add(
+                "show"
+            );
+
+
+            confirmationSection.scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+            });
+
+
+            console.log(
+                "PrintFlow online order:",
+                order
+            );
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "Order submission failed:",
+                error
+            );
+
+
+            alert(
+                "We couldn't send your print request.\n\n" +
+                "Please check your internet connection and try again."
+            );
+
+        }
+
+        finally {
+
+            sendRequestButton.disabled =
+                false;
+
+
+            sendRequestButton.textContent =
+                "Send Print Request";
+
+        }
 
     }
 );
@@ -1012,30 +1023,22 @@ newRequestButton.addEventListener(
     "click",
     function () {
 
-        // ====================================
-        // HIDE CONFIRMATION
-        // ====================================
-
         confirmationSection.classList.remove(
             "show"
         );
 
 
-        // ====================================
-        // SHOW PRINT SETTINGS
-        // ====================================
-
         printSettings.style.display =
             "";
 
 
-        // ====================================
-        // RESET FILE
-        // ====================================
+        fileInput.value =
+            "";
 
-        fileInput.value = "";
 
-        fileCard.classList.remove("show");
+        fileCard.classList.remove(
+            "show"
+        );
 
 
         fileName.textContent =
@@ -1046,32 +1049,17 @@ newRequestButton.addEventListener(
             "File selected";
 
 
-        // ====================================
-        // RESET PAGE COUNT
-        // ====================================
+        totalPages =
+            1;
 
-        totalPages = 1;
-
-
-        // ====================================
-        // RESET COPIES
-        // ====================================
 
         copiesInput.value =
             1;
 
 
-        // ====================================
-        // RESET PAGE RANGE
-        // ====================================
-
         pageRangeInput.value =
             "All";
 
-
-        // ====================================
-        // RESET PAPER SIZE
-        // ====================================
 
         const defaultPaperSize =
             document.querySelector(
@@ -1087,10 +1075,6 @@ newRequestButton.addEventListener(
         }
 
 
-        // ====================================
-        // RESET PRINT TYPE
-        // ====================================
-
         const defaultPrintType =
             document.querySelector(
                 'input[name="printType"][value="B&W"]'
@@ -1104,10 +1088,6 @@ newRequestButton.addEventListener(
 
         }
 
-
-        // ====================================
-        // RESET PRINT SIDES
-        // ====================================
 
         const defaultPrintSides =
             document.querySelector(
@@ -1123,16 +1103,8 @@ newRequestButton.addEventListener(
         }
 
 
-        // ====================================
-        // RECALCULATE PRICE
-        // ====================================
-
         calculatePrice();
 
-
-        // ====================================
-        // SCROLL TO SETTINGS
-        // ====================================
 
         printSettings.scrollIntoView({
             behavior: "smooth",
